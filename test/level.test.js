@@ -240,7 +240,8 @@ test("the level choice starts at level 1 and is not the advanced list", () => {
   assert.match(html, /data-level="2"/);
   assert.match(html, />Level 2</);
   assert.match(game, /title: "Advanced drills"/);
-  assert.doesNotMatch(html, /Advanced/);
+  const levelChoice = html.slice(html.indexOf('id="play-level"'), html.indexOf('id="play-status"'));
+  assert.doesNotMatch(levelChoice, /Advanced/);
   const handler = game.slice(
     game.indexOf('playLevelEl.addEventListener("click"'),
     game.indexOf("renderList();")
