@@ -356,8 +356,8 @@ body {
   pointer-events: none;
 }
 
-/* Phone and short windows: the page stays put. The pitch fits its pane.
-   A wide, tall window keeps the full-width pitch from the earlier layout. */
+/* Fixed page unless the window is both wider than 800px and taller than 500px.
+   390x626 and 700x400 stay inside. 900x600 and 1200x600 keep the full-width field. */
 @media (max-width: 800px), (max-height: 500px) {
   html {
     height: 100%;
@@ -488,19 +488,26 @@ body {
     max-height: none;
   }
 
+  .layout {
+    overflow: hidden;
+  }
+
   .drill-list {
+    align-self: start;
+    width: 100%;
+    height: 16rem;
+    max-height: 100%;
     min-width: 0;
     min-height: 0;
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
-    touch-action: pan-y;
   }
 }
 
-/* Portrait: stack. The list is a short pane, about two or three drills. */
-@media (max-width: 800px) {
+/* Narrow, including 390x626: field above a short list. */
+@media (max-width: 639px) {
   .site-header {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
@@ -534,19 +541,13 @@ body {
 
   .drill-list {
     flex: 0 0 auto;
-    height: 16rem;
   }
 }
 
-@media (max-width: 800px) and (max-height: 700px) {
-  .drill-list {
-    height: 12.5rem;
-  }
-}
-
-/* Landscape and other short windows: two panes. The list scrolls alone.
-   A short header leaves height for a wider field. */
-@media (max-height: 500px) {
+/* Two columns when the window is wide enough but not both wider than 800px and taller than 500px.
+   700x400 sits the list beside the field. 900x600 and 1200x600 do not. */
+@media (min-width: 640px) and (max-width: 800px),
+  (min-width: 640px) and (max-height: 500px) {
   .site-header {
     display: flex;
     flex-wrap: nowrap;
@@ -578,7 +579,7 @@ body {
 
   .layout {
     display: grid;
-    grid-template-columns: minmax(0, 1.55fr) minmax(10.5rem, 0.62fr);
+    grid-template-columns: minmax(0, 1.55fr) minmax(11rem, 0.7fr);
     grid-template-rows: minmax(0, 1fr);
     gap: 0.4rem;
     padding-top: 0.2rem;
@@ -588,6 +589,7 @@ body {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-rows: auto minmax(0, 1fr);
+    min-height: 0;
   }
 
   .pitch-copy {
@@ -605,10 +607,5 @@ body {
   .pitch-frame {
     grid-column: 1 / -1;
     grid-row: 2;
-  }
-
-  .drill-list {
-    height: auto;
-    max-height: none;
   }
 }
