@@ -111,8 +111,7 @@ body {
 }
 
 .pitch-frame {
-  display: flex;
-  justify-content: center;
+  display: block;
   background: var(--grass-dark);
   border-radius: 16px;
   padding: 0.75rem;
@@ -121,11 +120,8 @@ body {
 
 #pitch {
   display: block;
-  width: auto;
+  width: 100%;
   height: auto;
-  max-width: 100%;
-  max-height: calc(100vh - 12rem);
-  margin-inline: auto;
   border-radius: 10px;
   background: #12301f;
 }
@@ -360,15 +356,9 @@ body {
   pointer-events: none;
 }
 
-@media (max-width: 800px) {
+/* Side by side only when the screen is both wide and tall. */
+@media (max-width: 800px), (max-height: 500px) {
   .layout {
     grid-template-columns: 1fr;
-  }
-}
-
-@media (min-width: 801px) {
-  .pitch-panel {
-    position: sticky;
-    top: 1rem;
   }
 }
