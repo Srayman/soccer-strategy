@@ -394,7 +394,8 @@
     const inner = globalThis.SoccerAttempt;
 
     function cloneSpot(spot) {
-      return Object.freeze({ x: spot.x, y: spot.y, r: spot.r });
+      // Twice as wide around the same center. The good spot does not move.
+      return Object.freeze({ x: spot.x, y: spot.y, r: spot.r * 2 });
     }
 
     globalThis.SoccerAttempt = Object.freeze({
@@ -553,24 +554,48 @@
       return layer;
     }
 
+    const playerRadius = 18;
+
     function drawActor(layer, actor, className, title) {
       const g = svgEl("g", {
         class: "scene-player " + className,
         transform: "translate(" + actor.x + " " + actor.y + ")",
       });
-      g.append(svgEl("circle", { r: 12 }));
+      g.append(svgEl("circle", { r: playerRadius }));
       addTitle(g, title);
       layer.append(g);
     }
 
-    function drawBall(layer, ball) {
+    function ballDrawPoint(ball, actors) {
+      let cover = null;
+      let coverDistance = Infinity;
+      (actors || []).forEach(function (actor) {
+        if (!actor) return;
+        const distance = Math.hypot(actor.x - ball.x, actor.y - ball.y);
+        if (distance < coverDistance) {
+          cover = actor;
+          coverDistance = distance;
+        }
+      });
+      if (!cover || coverDistance > playerRadius) return ball;
+      const gap = playerRadius + 4;
+      if (coverDistance < 1) return { x: cover.x, y: cover.y + gap };
+      return {
+        x: cover.x + ((ball.x - cover.x) / coverDistance) * gap,
+        y: cover.y + ((ball.y - cover.y) / coverDistance) * gap,
+      };
+    }
+
+    function drawBall(layer, ball, actors) {
+      const place = ballDrawPoint(ball, actors);
       const g = svgEl("g", {
         class: "scene-ball",
-        transform: "translate(" + ball.x + " " + ball.y + ")",
+        transform: "translate(" + place.x + " " + place.y + ")",
+        "data-ball": "true",
       });
-      g.append(svgEl("circle", { r: 8 }));
-      g.append(svgEl("circle", { class: "scene-ball-spot", cx: -2, cy: -1, r: 2.2 }));
-      g.append(svgEl("circle", { class: "scene-ball-spot", cx: 3, cy: 2, r: 1.6 }));
+      g.append(svgEl("circle", { r: 16 }));
+      g.append(svgEl("circle", { class: "scene-ball-spot", cx: -4, cy: -2, r: 4.4 }));
+      g.append(svgEl("circle", { class: "scene-ball-spot", cx: 6, cy: 4, r: 3.2 }));
       addTitle(g, "Ball");
       layer.append(g);
     }
@@ -582,7 +607,7 @@
       });
       g.append(
         svgEl("circle", {
-          r: 12,
+          r: playerRadius,
           fill: "#f5f7f2",
           stroke: "#0b4f8a",
           "stroke-width": 4,
@@ -600,7 +625,7 @@
       if (!token || token.dataset.ready === "true") return;
       token.dataset.ready = "true";
       const body = token.querySelector(".drag-token");
-      if (body) body.setAttribute("r", "12");
+      if (body) body.setAttribute("r", "18");
       const label = svgEl("text", { class: "you-label", y: 4 });
       label.textContent = "You";
       token.append(label);
@@ -693,6 +718,9 @@
         label.textContent = guide.label;
         layer.append(label);
       });
+      const actors = (frame.opponents || [])
+        .concat(frame.teammates || [])
+        .concat(frame.learner ? [frame.learner] : []);
       (frame.opponents || []).forEach(function (actor) {
         drawActor(
           layer,
@@ -707,7 +735,7 @@
       if (scene.kind === "pick" && (frame.learner || scene.learner)) {
         drawYou(layer, frame.learner || scene.learner);
       }
-      if (frame.ball) drawBall(layer, frame.ball);
+      if (frame.ball) drawBall(layer, frame.ball, actors);
       decorateToken();
     }
 
