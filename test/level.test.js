@@ -251,6 +251,57 @@ test("the level choice starts at level 1 and is not the advanced list", () => {
   );
 });
 
+test("level 1 copy says pick and level 2 copy says drag", () => {
+  const level1 = scenes.levelAction(1);
+  const level2 = scenes.levelAction(2);
+  assert.match(level1, /pick/i);
+  assert.doesNotMatch(level1, /drag/i);
+  assert.match(level2, /drag/i);
+  assert.doesNotMatch(level2, /pick/i);
+  assert.equal(openBody.kind, "drag");
+  assert.equal(checkAway.kind, "pick");
+  assert.equal(scenes.levelCopy("Drag to the mark.", 1), "Pick to the mark.");
+  assert.doesNotMatch(scenes.levelCopy("Drag to the mark.", 1), /drag/i);
+  assert.equal(scenes.levelCopy("Pick a spot.", 2), "Drag a spot.");
+  assert.doesNotMatch(scenes.levelCopy("Pick a spot.", 2), /pick/i);
+
+  function captionsOf(scene) {
+    const list = [];
+    if (scene.caption) list.push(scene.caption);
+    if (scene.pictures) {
+      Object.keys(scene.pictures).forEach((id) => {
+        if (scene.pictures[id].caption) list.push(scene.pictures[id].caption);
+      });
+    }
+    return list;
+  }
+
+  for (const scene of scenes.scenes) {
+    for (const caption of captionsOf(scene)) {
+      const shown1 = scenes.levelCopy(caption, 1);
+      const shown2 = scenes.levelCopy(caption, 2);
+      assert.doesNotMatch(shown1, /\bdrag\b/i, scene.id + " level 1: " + shown1);
+      assert.doesNotMatch(shown2, /\bpick\b/i, scene.id + " level 2: " + shown2);
+      if (/\bpick\b/i.test(caption)) assert.match(shown2, /\bdrag\b/i, scene.id);
+      if (/\bdrag\b/i.test(caption)) assert.match(shown1, /\bpick\b/i, scene.id);
+    }
+  }
+
+  const game = fs.readFileSync(path.join(root, "js", "game.js"), "utf8");
+  const sceneSource = fs.readFileSync(path.join(root, "js", "starter-scenes.js"), "utf8");
+  assert.match(game, /StarterScenes\.levelAction\(level\)/);
+  assert.match(game, /kind\.textContent = kindLabel\(\)/);
+  assert.doesNotMatch(game, /kindLabel\(drill\.kind\)/);
+  assert.doesNotMatch(game, /kind === "drag" \? "Drag" : "Pick"/);
+  assert.match(sceneSource, /caption\.textContent = levelCopy\(/);
+  const handler = game.slice(
+    game.indexOf('playLevelEl.addEventListener("click"'),
+    game.indexOf("renderList();")
+  );
+  assert.match(handler, /paintKinds\(\)/);
+  assert.doesNotMatch(handler, /settle\(/);
+});
+
 test("level 2 hides zones and keeps pick marks on screen", () => {
   const attempt = harness.attempt;
   const game = fs.readFileSync(path.join(root, "js", "game.js"), "utf8");

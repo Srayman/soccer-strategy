@@ -931,9 +931,10 @@
         return;
       }
       const frame = frameFor(scene);
-      const captionText = frame.caption || scene.caption || "";
-      caption.hidden = captionText === "";
-      caption.textContent = captionText;
+      const pressed = document.querySelector("#play-level button[aria-pressed='true']");
+      const playLevel = pressed && Number(pressed.dataset.level) === 2 ? 2 : 1;
+      caption.textContent = levelCopy(frame.caption || scene.caption || "", playLevel);
+      caption.hidden = caption.textContent === "";
       (frame.guides || scene.guides || []).forEach(function (guide) {
         layer.append(
           svgEl("line", {
@@ -991,6 +992,29 @@
     draw();
   }
 
+  function swapWord(word, next) {
+    if (word === word.toUpperCase()) return next.toUpperCase();
+    if (word.charAt(0) === word.charAt(0).toUpperCase()) {
+      return next.charAt(0).toUpperCase() + next.slice(1);
+    }
+    return next;
+  }
+
+  // Shown words follow the level. Level 1 says pick. Level 2 says drag.
+  // Stored scene text and the catalog kind stay as they are.
+  function levelCopy(text, level) {
+    const source = String(text || "");
+    const from = level === 2 ? "pick" : "drag";
+    const to = level === 2 ? "drag" : "pick";
+    return source.replace(new RegExp("\\b" + from + "\\b", "gi"), function (word) {
+      return swapWord(word, to);
+    });
+  }
+
+  function levelAction(level) {
+    return level === 2 ? "Drag" : "Pick";
+  }
+
   return Object.freeze({
     pitch: pitch,
     scenes: scenes,
@@ -999,6 +1023,8 @@
     markersFor: markersFor,
     usePicture: usePicture,
     install: install,
+    levelCopy: levelCopy,
+    levelAction: levelAction,
     redraw: function () {
       paintScene();
     },

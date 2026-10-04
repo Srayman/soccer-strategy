@@ -39,8 +39,15 @@
   let session = pointsApi.createSession();
   let clearance = clearApi.createClearance();
 
-  function kindLabel(kind) {
-    return kind === "drag" ? "Drag" : "Pick";
+  function kindLabel() {
+    return globalThis.StarterScenes.levelAction(level);
+  }
+
+  function paintKinds() {
+    const label = kindLabel();
+    listEl.querySelectorAll(".drill-kind").forEach((kind) => {
+      kind.textContent = label;
+    });
   }
 
   function renderList() {
@@ -110,7 +117,7 @@
 
     const kind = document.createElement("span");
     kind.className = "drill-kind";
-    kind.textContent = kindLabel(drill.kind);
+    kind.textContent = kindLabel();
 
     const button = document.createElement("button");
     button.type = "button";
@@ -612,6 +619,7 @@
       if (nextLevel === level) return;
       level = nextLevel;
       paintLevels();
+      paintKinds();
       if (!currentId) return;
       const drill = drills.find((entry) => entry.id === currentId);
       if (!drill || !api.canStart(drill, session.endedDrills)) return;
