@@ -14,12 +14,17 @@
     </header>
     <main class="layout">
       <section class="pitch-panel" aria-labelledby="pitch-heading">
-        <h2 id="pitch-heading">Pitch</h2>
-        <p id="play-status" class="play-status" aria-live="polite"></p>
+        <div class="pitch-copy">
+          <h2 id="pitch-heading">Pitch</h2>
+          <p id="play-status" class="play-status" aria-live="polite"></p>
+        </div>
         <button id="next-play" type="button" class="next-play" disabled>Next play</button>
         <div class="pitch-frame">
+          <div class="pitch-fit">
           <svg
             id="pitch"
+            width="744"
+            height="1180"
             viewBox="-32 -56 744 1180"
             role="img"
             aria-label="Top-down soccer pitch. Attack the top goal. Defend the bottom goal."
@@ -85,6 +90,7 @@
               <text x="340" y="1096">Defend</text>
             </g>
           </svg>
+          </div>
         </div>
       </section>
       <div id="drill-list" class="drill-list"></div>
