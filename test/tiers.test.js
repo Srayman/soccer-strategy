@@ -4,6 +4,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { drills, isLocked, canStart } = require("../js/catalog.js");
 const { createSession, settle } = require("../js/points.js");
+const { createClearance, noteEnded, isCleared, markEnded } = require("../js/clear.js");
 const {
   goodSpots,
   markedTargets,
@@ -41,10 +42,31 @@ function endCorrect(drill) {
   return pick(createPickAttempt(drill), correctTarget.id);
 }
 
+function withPicture(ended, pictureId) {
+  return Object.freeze(Object.assign({}, ended, { pictureId: pictureId }));
+}
+
 function finish(session, drill, ended) {
   assert.equal(ended.ended, true, drill.name);
   assert.equal(ended.drillId, drill.id, drill.name);
-  return settle(session, ended);
+  let next = settle(session, ended);
+  const clearance = noteEnded(session.clearance || createClearance(), ended);
+  if (isCleared(clearance, ended.drillId)) next = markEnded(next, ended.drillId);
+  return Object.freeze(Object.assign({}, next, { clearance: clearance }));
+}
+
+function finishKeeper(session, endOne) {
+  let next = finish(session, goalkeeper, withPicture(endOne(goalkeeper), "central"));
+  assert.equal(next.endedDrills.includes(goalkeeper.id), false);
+  next = finish(next, goalkeeper, withPicture(endOne(goalkeeper), "near-post"));
+  assert.equal(next.endedDrills.includes(goalkeeper.id), false);
+  next = finish(next, goalkeeper, withPicture(endOne(goalkeeper), "through-ball"));
+  assert.equal(next.endedDrills.includes(goalkeeper.id), true);
+  assert.equal(next.endedDrills.filter((id) => id === goalkeeper.id).length, 1);
+  assert.equal(next.endedDrills.includes("central"), false);
+  assert.equal(next.endedDrills.includes("near-post"), false);
+  assert.equal(next.endedDrills.includes("through-ball"), false);
+  return next;
 }
 
 test("next stays locked until every starter has ended once", () => {
@@ -61,19 +83,20 @@ test("next stays locked until every starter has ended once", () => {
   }
 
   for (let i = 0; i < starters.length - 1; i += 1) {
-    session = finish(session, starters[i], endMiss(starters[i]));
-    assert.equal(canStart(diagonal, session.endedDrills), false, starters[i].name);
-    assert.equal(canStart(zones, session.endedDrills), false, starters[i].name);
+    const drill = starters[i];
+    const ended =
+      drill.id === goalkeeper.id
+        ? withPicture(endMiss(drill), "central")
+        : endMiss(drill);
+    session = finish(session, drill, ended);
+    assert.equal(canStart(diagonal, session.endedDrills), false, drill.name);
+    assert.equal(canStart(zones, session.endedDrills), false, drill.name);
   }
 
-  assert.equal(session.endedDrills.includes(goalkeeper.id), true);
+  assert.equal(session.endedDrills.includes(goalkeeper.id), false);
   assert.equal(session.endedDrills.includes("central"), false);
   assert.equal(session.endedDrills.includes("near-post"), false);
   assert.equal(session.endedDrills.includes("through-ball"), false);
-  assert.equal(
-    session.endedDrills.filter((id) => id === goalkeeper.id).length,
-    1
-  );
 
   const last = starters[starters.length - 1];
   const before = session.points;
@@ -81,6 +104,15 @@ test("next stays locked until every starter has ended once", () => {
   assert.equal(missed.state, "miss");
   session = finish(session, last, missed);
   assert.equal(session.points - before, 1);
+  assert.equal(session.endedDrills.includes(goalkeeper.id), false);
+  assert.equal(canStart(diagonal, session.endedDrills), false);
+
+  session = finish(session, goalkeeper, withPicture(endMiss(goalkeeper), "near-post"));
+  assert.equal(session.endedDrills.includes(goalkeeper.id), false);
+  assert.equal(canStart(diagonal, session.endedDrills), false);
+  session = finish(session, goalkeeper, withPicture(endMiss(goalkeeper), "through-ball"));
+  assert.equal(session.endedDrills.includes(goalkeeper.id), true);
+  assert.equal(session.endedDrills.filter((id) => id === goalkeeper.id).length, 1);
   assert.equal(session.endedDrills.length, starters.length);
 
   for (const drill of nextDrills) {
@@ -97,7 +129,10 @@ test("advanced stays locked until every next drill has ended once", () => {
   let session = createSession();
 
   for (const drill of starters) {
-    session = finish(session, drill, endCorrect(drill));
+    session =
+      drill.id === goalkeeper.id
+        ? finishKeeper(session, endCorrect)
+        : finish(session, drill, endCorrect(drill));
   }
   for (const drill of advanced) {
     assert.equal(canStart(drill, session.endedDrills), false, drill.name);
@@ -140,7 +175,10 @@ test("a miss still clears", () => {
 
   for (const drill of starters) {
     if (drill.id === openBody.id) continue;
-    session = finish(session, drill, endCorrect(drill));
+    session =
+      drill.id === goalkeeper.id
+        ? finishKeeper(session, endCorrect)
+        : finish(session, drill, endCorrect(drill));
   }
   assert.equal(canStart(diagonal, session.endedDrills), true);
   assert.equal(canStart(zones, session.endedDrills), false);
@@ -161,7 +199,12 @@ test("a miss still clears", () => {
 
 test("a reload starts locked again", () => {
   let session = createSession();
-  for (const drill of starters) session = finish(session, drill, endMiss(drill));
+  for (const drill of starters) {
+    session =
+      drill.id === goalkeeper.id
+        ? finishKeeper(session, endMiss)
+        : finish(session, drill, endMiss(drill));
+  }
   for (const drill of nextDrills) session = finish(session, drill, endMiss(drill));
   assert.equal(canStart(diagonal, session.endedDrills), true);
   assert.equal(canStart(zones, session.endedDrills), true);
@@ -188,6 +231,7 @@ test("a reload starts locked again", () => {
     "js/catalog.js",
     "js/game.js",
     "js/points.js",
+    "js/clear.js",
     "js/scene-play.js",
     "js/starter-scenes.js",
   ];

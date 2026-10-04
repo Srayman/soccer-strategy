@@ -163,6 +163,9 @@
     if (attempt && attempt.ended === true && attempt !== previous) {
       session = pointsApi.settle(session, attempt);
       clearance = clearApi.noteEnded(clearance, attempt);
+      if (clearApi.isCleared(clearance, attempt.drillId)) {
+        session = clearApi.markEnded(session, attempt.drillId);
+      }
       refreshDrills();
     }
     renderPoints();

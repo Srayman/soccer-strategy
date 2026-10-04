@@ -40,9 +40,21 @@
     });
   }
 
+  function markEnded(session, id) {
+    if (!session || id !== drillId) return session;
+    const ended = session.endedDrills || [];
+    if (ended.indexOf(id) !== -1) return session;
+    return Object.freeze(
+      Object.assign({}, session, {
+        endedDrills: Object.freeze(ended.concat(id)),
+      })
+    );
+  }
+
   return Object.freeze({
     createClearance: createClearance,
     noteEnded: noteEnded,
     isCleared: isCleared,
+    markEnded: markEnded,
   });
 });

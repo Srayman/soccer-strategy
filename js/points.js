@@ -8,10 +8,13 @@
     root.SoccerPoints = api;
   }
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
+  const goalkeeperId = "goalkeeper-step-out-and-line-up";
+
   function createSession() {
     return Object.freeze({
       points: 0,
       endedDrills: Object.freeze([]),
+      scoredDrills: Object.freeze([]),
     });
   }
 
@@ -19,13 +22,17 @@
     if (!attempt || attempt.ended !== true) return session;
     if (attempt.state !== "miss" && attempt.state !== "correct") return session;
 
-    const first = session.endedDrills.indexOf(attempt.drillId) === -1;
+    const scored = Array.isArray(session.scoredDrills) ? session.scoredDrills : [];
+    const first = scored.indexOf(attempt.drillId) === -1;
     const added = first && attempt.state === "correct" ? 3 : 1;
+    const ended = session.endedDrills;
+    const keeper = attempt.drillId === goalkeeperId;
+    const already = ended.indexOf(attempt.drillId) !== -1;
     return Object.freeze({
       points: session.points + added,
-      endedDrills: first
-        ? Object.freeze(session.endedDrills.concat(attempt.drillId))
-        : session.endedDrills,
+      endedDrills:
+        keeper || already ? ended : Object.freeze(ended.concat(attempt.drillId)),
+      scoredDrills: first ? Object.freeze(scored.concat(attempt.drillId)) : scored,
     });
   }
 
