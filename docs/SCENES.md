@@ -24,7 +24,7 @@ The good spot is the open pocket a few meters away from that opponent, where the
 
 ### Stay wide
 
-This is a drag. The learner is the wide player and is already near a touchline. The ball is in the middle. One teammate is already central.
+This is a drag. The learner is the wide player and is already near a touchline. The ball is in the middle. One teammate is already central. One defender is in that middle.
 
 The good spot stays on that touchline, level with the ball or slightly ahead of it. The learner does not run to the ball. Drifting into the crowd is the miss.
 
@@ -84,7 +84,7 @@ The good spot is a few meters behind that teammate and slightly inside, on the p
 
 ### Squeeze the middle
 
-This is a drag. The learner is the weak-side defender. The ball is on the other wing. One teammate is pressing the ball.
+This is a drag. The learner is the weak-side defender. The ball is on the other wing. One teammate is pressing the ball. The opponent is the player on that ball. There is not a second opponent.
 
 The weak-side defender shifts toward the central channel. That shift is the good spot. Staying on the far touchline is the miss. Jumping all the way to the ball is the miss.
 
@@ -96,13 +96,13 @@ The good spot is a curved run back toward that goal. The run ends goal-side of t
 
 ### Goalkeeper step-out and line-up
 
-This is one starter. It has three pictures. It is not three drills. The learner is the goalkeeper. The learner can switch angles before the drag. The angles are central, near post, and one free ball. Near post is an angle in this drill. It is not a second drill. There is no outfield crowd. The central picture and the near-post picture each have one shooter. The through-ball picture has no shooter.
+This is one starter. It has three pictures. It is not three drills. The learner is the goalkeeper. The learner can switch angles before the drag. The angles are central, near post, and one free ball. Near post is an angle in this drill. It is not a second drill. There is no outfield crowd. The central picture and the near-post picture each have one shooter. The through-ball picture has no shooter. It has one defender off the ball.
 
 The central picture has the ball in front of the goal, outside the six-yard box. The good spot is one or two steps off the goal line, in the center of the goal, on the line from the ball to the middle of the goal. The penalty spot is the miss.
 
 The near-post picture has the ball wide, near the corner of the penalty area. The good spot is toward the near post, a step or two off the goal line, about an arm's length from that post. The center of the goal is the miss. A spot outside the post is the miss.
 
-The through-ball picture has one free ball only. The good spot is on the ball's path at the edge of the six-yard box.
+The through-ball picture has one free ball only. The good spot is on the ball's path at the edge of the six-yard box. The defender is not on that ball. This picture is not a shot.
 
 A set close shot stays in the central and near-post pictures.
 
@@ -184,7 +184,7 @@ The good spot is on the inside shoulder, goal-side, so the easy path is the touc
 
 ### Goalkeeper depth
 
-This is a drag. The learner is the goalkeeper. The ball is in the opponent's half. It is not a shot.
+This is a drag. The learner is the goalkeeper. The ball is in the opponent's half. One defender is on that ball. It is not a shot.
 
 The good spot is near the goal line, in the center of the goal. The penalty spot is the miss. A chip beats the goalkeeper there.
 
@@ -230,7 +230,7 @@ In the runner picture, that ball is in the runner's path. The learner is the run
 
 This is a pick. It has two pictures. The throw is on the right touchline. The learner is the thrower.
 
-In the first picture, a near player is open. The good mark is the short throw to that player. The long throw is the miss in this picture.
+In the first picture, a near player is open. One defender is not on that player. The good mark is the short throw to that player. The long throw is the miss in this picture.
 
 In the second picture, opponents mark the near side. One teammate is open on the far side. The good mark is the long throw to that open far player. The short throw to the marked near side is the miss in this picture.
 
@@ -270,7 +270,7 @@ If the learner is closest and the other defenders can slide into the middle, the
 
 ### Rest defense
 
-This is a drag. One player stays while two teammates attack the top goal with the ball. The learner is the player who stays.
+This is a drag. One player stays while two teammates attack the top goal with the ball. The learner is the player who stays. One opponent is on the field, off the ball.
 
 The good spot is goal-side of the ball, central, near the halfway line. Joining the attack is the miss. Dropping to the goal line is the miss.
 
@@ -294,12 +294,12 @@ The marks are the third player arriving in the space that step opened, the origi
 
 ### Far-post run
 
-This is a pick. A teammate is about to cross from the right. One teammate is already at the near post. The learner chooses the run.
+This is a pick. A teammate is about to cross from the right. One teammate is already at the near post. One defender is not at the far post. The learner chooses the run.
 
 The marks are the far post, arriving as the cross comes, the near post, and a spot next to the crosser. The near post is already taken. The correct mark is the far post.
 
 ### Swap places
 
-This is a pick. The picture is attacking. A teammate overlaps outside with the ball. The learner is the wide player in that path.
+This is a pick. The picture is attacking. A teammate overlaps outside with the ball. One defender is outside with that overlap. The learner is the wide player in that path.
 
 The wide player pinches into the inside spot that teammate left. That inside spot is the correct mark. Staying in the same lane is the miss. Stopping in front of the overlap is the miss.

@@ -287,9 +287,14 @@ test("goalkeeper depth stays on the goal line", () => {
   const picture = sceneById("goalkeeper-depth").pictures[0];
   const spot = picture.goodSpot;
   const penalty = { x: pitch.width / 2, y: pitch.length - 11 };
+  const defender = one(picture, "defender");
   assert.equal(learner(picture).role, "goalkeeper");
-  assert.equal(picture.players.length, 1);
+  assert.equal(picture.players.length, 2);
+  assert.equal(defender.team, "opponent");
+  assert.notEqual(defender.role, "shooter");
+  assert.deepEqual(picture.ball, { x: defender.x, y: defender.y });
   assert.ok(picture.ball.y < pitch.halfway);
+  assert.ok(defender.y < pitch.halfway);
   assert.equal(spot.x, pitch.width / 2);
   assert.ok(pitch.length - spot.y > 0);
   assert.ok(pitch.length - spot.y <= 2);
@@ -459,10 +464,9 @@ test("throw switch plays short when near is open and long when it is marked", ()
   }
 
   assert.equal(open.correctMarkId, "short");
-  assert.equal(
-    open.players.filter((player) => player.team === "opponent").length,
-    0
-  );
+  const openDefenders = open.players.filter((player) => player.team === "opponent");
+  assert.equal(openDefenders.length, 1);
+  assert.ok(distance(openDefenders[0], one(open, "near")) > 8);
 
   assert.equal(marked.correctMarkId, "long");
   const near = one(marked, "near");

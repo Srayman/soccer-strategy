@@ -307,6 +307,13 @@
               x: 34,
               y: 94,
             }),
+            player({
+              id: "defender",
+              team: "opponent",
+              role: "defender",
+              x: 36,
+              y: 24,
+            }),
           ]),
           // Near the goal line, in the center of the goal. Not the penalty spot.
           goodSpot: spot(34, 103.5, dragRadius),
@@ -614,6 +621,13 @@
               role: "far",
               x: 8,
               y: 44,
+            }),
+            player({
+              id: "defender",
+              team: "opponent",
+              role: "defender",
+              x: 48,
+              y: 38,
             }),
           ]),
           marks: Object.freeze([

@@ -179,6 +179,11 @@ test("rest defense stays central and goal-side near halfway", () => {
   assert.ok(Math.abs(picture.goodSpot.x - pitch.width / 2) <= 2);
   assert.ok(Math.abs(picture.goodSpot.y - pitch.halfway) <= 3);
   assert.ok(picture.goodSpot.y < pitch.length - 16.5);
+  const opponents = picture.players.filter((player) => player.team === "opponent");
+  assert.equal(opponents.length, 1);
+  assert.ok(distance(opponents[0], picture.ball) > 4);
+  assert.ok(distance(opponents[0], picture.goodSpot) > picture.goodSpot.r);
+  assert.ok(picture.goodSpot.y > opponents[0].y);
 });
 
 test("counter-press is one spot that cuts the forward pass", () => {
@@ -278,6 +283,9 @@ test("far-post run chooses the far post on a cross from the right", () => {
   assert.equal(nearMate.y, near.y);
   assert.ok(distance(beside, crosser) < 12);
   assert.ok(distance(beside, crosser) > beside.r);
+  const defender = one(picture, "defender");
+  assert.equal(defender.team, "opponent");
+  assert.ok(distance(defender, far) > far.r + 3);
 });
 
 test("swap places pinches the wide player inside the overlap", () => {
@@ -300,4 +308,8 @@ test("swap places pinches the wide player inside the overlap", () => {
   assert.ok(inFront.y < overlap.y);
   assert.notEqual(picture.correctMarkId, "same-lane");
   assert.notEqual(picture.correctMarkId, "in-front");
+  const defender = one(picture, "defender");
+  assert.equal(defender.team, "opponent");
+  assert.ok(defender.x > overlap.x);
+  assert.ok(distance(defender, inside) > inside.r + 3);
 });
