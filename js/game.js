@@ -4,6 +4,7 @@
   const pointsApi = globalThis.SoccerPoints;
   const clearApi = globalThis.SoccerClear;
   const nextPlayApi = globalThis.SoccerNextPlay;
+  const celebrateApi = globalThis.SoccerCelebrate;
   const drills = api.drills;
   const listEl = document.querySelector("#drill-list");
   const statusEl = document.querySelector("#play-status");
@@ -394,7 +395,64 @@
     return group;
   }
 
+  function paintCelebration(mark) {
+    const group = svgEl("g", {
+      id: "spot-celebration",
+      class: "spot-celebration",
+      "data-celebration": "correct",
+      "aria-hidden": "true",
+    });
+
+    function placed(className, point, child) {
+      const wrap = svgEl("g", {
+        transform: "translate(" + point.x + " " + point.y + ")",
+      });
+      const spin = svgEl("g", { class: className });
+      if (point.delayMs) spin.style.animationDelay = point.delayMs + "ms";
+      spin.append(child);
+      wrap.append(spin);
+      group.append(wrap);
+    }
+
+    placed(
+      "burst-disc",
+      mark.disc,
+      svgEl("circle", {
+        class: "burst-disc-shape",
+        cx: 0,
+        cy: 0,
+        r: mark.disc.r,
+      })
+    );
+    placed(
+      "burst-ring",
+      mark.ring,
+      svgEl("circle", {
+        class: "burst-ring-shape",
+        cx: 0,
+        cy: 0,
+        r: mark.ring.r,
+      })
+    );
+    mark.stars.forEach((star) => {
+      placed(
+        "burst-star",
+        star,
+        svgEl("polygon", {
+          class: "burst-star-shape",
+          points: mark.shapes[star.shape],
+          fill: star.fill,
+        })
+      );
+    });
+    return group;
+  }
+
   function renderAttempt() {
+    const frame = pitchEl.closest(".pitch-frame");
+    const mark = attempt ? celebrateApi.celebrationFor(attempt) : null;
+    if (frame) frame.classList.toggle("is-celebrating", Boolean(mark));
+
     const existing = pitchEl.querySelector("#attempt-layer");
     if (!attempt) {
       if (existing) existing.remove();
@@ -419,6 +477,7 @@
     }
     const motion = nextPlayApi.animationFor(attempt);
     if (motion) layer.append(paintMotion(motion));
+    if (mark) layer.append(paintCelebration(mark));
   }
 
   function sync() {

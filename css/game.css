@@ -625,3 +625,94 @@ body {
     grid-row: 2;
   }
 }
+
+.spot-celebration {
+  pointer-events: none;
+}
+
+.burst-disc,
+.burst-ring,
+.burst-star {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation-name: burst-pop;
+  animation-duration: 2.8s;
+  animation-timing-function: ease-out;
+  animation-iteration-count: 1;
+  animation-fill-mode: both;
+}
+
+.burst-disc-shape {
+  fill: rgb(255 229 106 / 48%);
+  stroke: none;
+}
+
+.burst-ring-shape {
+  fill: none;
+  stroke: #ffe56a;
+  stroke-width: 16;
+}
+
+.burst-star-shape {
+  stroke: #143322;
+  stroke-width: 4;
+}
+
+.pitch-frame.is-celebrating {
+  animation: celebrate-glow 2.8s ease-out 1;
+}
+
+@keyframes burst-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.12) rotate(-20deg);
+  }
+
+  16% {
+    opacity: 1;
+    transform: scale(1.18) rotate(8deg);
+  }
+
+  72% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(0.92) rotate(0deg);
+  }
+}
+
+@keyframes celebrate-glow {
+  0% {
+    box-shadow: 0 0 0 0 #ffe56a;
+  }
+
+  20% {
+    box-shadow: 0 0 0 8px #ffe56a, 0 0 28px 4px #ff9f1c;
+  }
+
+  70% {
+    box-shadow: 0 0 0 6px #ffe56a;
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .burst-disc,
+  .burst-ring,
+  .burst-star,
+  .pitch-frame.is-celebrating {
+    animation: none;
+  }
+
+  .burst-disc,
+  .burst-ring,
+  .burst-star {
+    opacity: 1;
+  }
+}
