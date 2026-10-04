@@ -26,4 +26,4 @@ There is no saved storage, so points reset when the page closes.
 
 ## Publishing
 
-GitHub Pages serves the repository root from main through the existing static workflow. That workflow uploads the repository root. The game page is index.html at that root. Each pull request also gets its own preview URL so the page can be checked before merge.
+GitHub Pages deploys the main branch as static HTML, from the repository root, and the game page is index.html at that root.
