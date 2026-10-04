@@ -48,7 +48,7 @@ Drag:
 - Pressure and cover. The learner is the cover player.
 - Squeeze the middle
 - Recovery run
-- Goalkeeper step-out and line-up. This is one starter, not three drills. The learner can switch angles before the drag. The angles are central, near post, and through-ball versus a set close shot. Near post is an angle in this drill, not a second drill. The drill is cleared after one ended attempt on each angle.
+- Goalkeeper step-out and line-up. This is one starter, not three drills. The learner can switch pictures before the drag. The pictures are central, near post, and one free ball at the edge of the six. Near post is a picture in this drill, not a second drill. The drill is cleared after one ended attempt on each picture. One ended attempt does not clear the drill.
 
 Pick:
 
