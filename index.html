@@ -18,31 +18,32 @@
         <div class="pitch-frame">
           <svg
             id="pitch"
-            viewBox="-36 -24 1122 728"
+            viewBox="-32 -56 744 1180"
             role="img"
-            aria-label="Top-down soccer pitch"
+            aria-label="Top-down soccer pitch. Attack the top goal. Defend the bottom goal."
           >
-            <rect x="-36" y="-24" width="1122" height="728" fill="#12301f" />
+            <!-- 105 m by 68 m. 10 px is 1 m. Attack the top goal. Defend the bottom goal. -->
+            <rect x="-32" y="-56" width="744" height="1180" fill="#12301f" />
             <defs>
               <pattern
                 id="mowing-stripes"
-                width="1050"
+                width="680"
                 height="68"
                 patternUnits="userSpaceOnUse"
               >
-                <rect width="1050" height="34" fill="#2f8f46" />
-                <rect y="34" width="1050" height="34" fill="#277a3c" />
+                <rect width="680" height="34" fill="#2f8f46" />
+                <rect y="34" width="680" height="34" fill="#277a3c" />
               </pattern>
             </defs>
             <g id="goals" fill="#d7efe0" stroke="#f5f7f2" stroke-width="3">
-              <rect x="-22" y="303.4" width="22" height="73.2" />
-              <rect x="1050" y="303.4" width="22" height="73.2" />
+              <rect x="303.4" y="-22" width="73.2" height="22" />
+              <rect x="303.4" y="1050" width="73.2" height="22" />
             </g>
             <rect
               x="0"
               y="0"
-              width="1050"
-              height="680"
+              width="680"
+              height="1050"
               fill="url(#mowing-stripes)"
             />
             <g
@@ -52,24 +53,34 @@
               stroke-linejoin="round"
               stroke-linecap="round"
             >
-              <rect x="0" y="0" width="1050" height="680" />
-              <line x1="525" y1="0" x2="525" y2="680" />
-              <circle cx="525" cy="340" r="91.5" />
-              <rect x="0" y="138.4" width="165" height="403.2" />
-              <rect x="885" y="138.4" width="165" height="403.2" />
-              <rect x="0" y="248.4" width="55" height="183.2" />
-              <rect x="995" y="248.4" width="55" height="183.2" />
-              <path d="M165 266.88 A91.5 91.5 0 0 1 165 413.12" />
-              <path d="M885 266.88 A91.5 91.5 0 0 0 885 413.12" />
-              <path d="M10 0 A10 10 0 0 0 0 10" />
-              <path d="M1040 0 A10 10 0 0 1 1050 10" />
-              <path d="M0 670 A10 10 0 0 0 10 680" />
-              <path d="M1050 670 A10 10 0 0 1 1040 680" />
+              <rect x="0" y="0" width="680" height="1050" />
+              <line x1="0" y1="525" x2="680" y2="525" />
+              <circle cx="340" cy="525" r="91.5" />
+              <rect x="138.4" y="0" width="403.2" height="165" />
+              <rect x="138.4" y="885" width="403.2" height="165" />
+              <rect x="248.4" y="0" width="183.2" height="55" />
+              <rect x="248.4" y="995" width="183.2" height="55" />
+              <path d="M266.88 165 A91.5 91.5 0 0 0 413.12 165" />
+              <path d="M266.88 885 A91.5 91.5 0 0 1 413.12 885" />
+              <path d="M10 0 A10 10 0 0 1 0 10" />
+              <path d="M680 10 A10 10 0 0 1 670 0" />
+              <path d="M0 1040 A10 10 0 0 1 10 1050" />
+              <path d="M670 1050 A10 10 0 0 1 680 1040" />
             </g>
             <g fill="#f5f7f2">
-              <circle cx="525" cy="340" r="4" />
-              <circle cx="110" cy="340" r="4" />
-              <circle cx="940" cy="340" r="4" />
+              <circle cx="340" cy="525" r="4" />
+              <circle cx="340" cy="110" r="4" />
+              <circle cx="340" cy="940" r="4" />
+            </g>
+            <g
+              fill="#d7efe0"
+              font-family="Trebuchet MS, Segoe UI, sans-serif"
+              font-size="18"
+              font-weight="700"
+              text-anchor="middle"
+            >
+              <text x="340" y="-30">Attack</text>
+              <text x="340" y="1096">Defend</text>
             </g>
           </svg>
         </div>
@@ -78,6 +89,7 @@
     </main>
     <script src="js/catalog.js"></script>
     <script src="js/attempt.js"></script>
+    <script src="js/starter-scenes.js"></script>
     <script src="js/game.js"></script>
   </body>
 </html>
