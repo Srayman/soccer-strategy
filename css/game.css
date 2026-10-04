@@ -483,6 +483,10 @@ body {
     margin: 0.15rem 0 0;
   }
 
+  .starter-angles {
+    flex: none;
+  }
+
   .pitch-copy h2 {
     margin: 0;
     font-size: 1rem;
@@ -651,13 +655,18 @@ body {
   .pitch-panel {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
     min-height: 0;
   }
 
   .pitch-copy {
     grid-column: 1;
     grid-row: 1;
+  }
+
+  .starter-angles {
+    grid-column: 1 / -1;
+    grid-row: 2;
   }
 
   .next-play {
@@ -669,7 +678,7 @@ body {
 
   .pitch-frame {
     grid-column: 1 / -1;
-    grid-row: 2;
+    grid-row: 3;
   }
 }
 

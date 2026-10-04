@@ -665,6 +665,12 @@
       el = document.createElement(id === "starter-angles" ? "div" : "p");
       el.id = id;
       el.className = className;
+      if (id === "starter-angles") {
+        // The copy scrolls and is height-capped. Picture controls stay outside it
+        // so the third control can be used while playing.
+        statusEl.closest(".pitch-copy").insertAdjacentElement("afterend", el);
+        return el;
+      }
       const legend = document.getElementById("starter-legend");
       const caption = document.getElementById("starter-caption");
       const anchor = id === "starter-caption" ? statusEl : id === "starter-legend" ? caption : legend;

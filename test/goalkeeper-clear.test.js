@@ -194,3 +194,22 @@ test("the goalkeeper heading does not say versus a set close shot", () => {
   assert.doesNotMatch(listener, /settle\(/);
   assert.doesNotMatch(game, /better|worse/);
 });
+
+test("the third goalkeeper picture control stays outside the scrolling copy", () => {
+  const source = fs.readFileSync(path.join(root, "js", "starter-scenes.js"), "utf8");
+  const css = fs.readFileSync(path.join(root, "css", "game.css"), "utf8");
+  assert.match(
+    source,
+    /statusEl\.closest\("\.pitch-copy"\)\.insertAdjacentElement\("afterend", el\)/
+  );
+  const compact = css.slice(css.indexOf("/* Fixed page unless"), css.indexOf(".spot-celebration"));
+  assert.match(compact, /\.starter-angles \{\s*flex: none;/);
+  assert.match(compact, /\.starter-angles \{\s*grid-column: 1 \/ -1;\s*grid-row: 2;/);
+  assert.match(compact, /\.pitch-frame \{\s*grid-column: 1 \/ -1;\s*grid-row: 3;/);
+  const through = require("../js/starter-scenes.js").frameFor(
+    require("../js/starter-scenes.js").byId["goalkeeper-step-out-and-line-up"],
+    "through-ball"
+  );
+  assert.equal(through.opponents.length, 1);
+  assert.notEqual(through.opponents[0].name, "shooter");
+});
