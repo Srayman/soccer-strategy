@@ -662,10 +662,19 @@
     });
   }
 
+  // A fresh load opens the first starter. It does not force Triangle.
+  // When that first starter is Triangle, no drill is selected.
+  // Starting here does not end an attempt, so the score stays at 0.
+  function openingSelection(list) {
+    const first = list.find((drill) => drill.tier === "starter");
+    if (!first || first.id === "triangle" || first.name === "Triangle") return null;
+    return first;
+  }
+
   renderList();
   paintLevels();
-  const opening = drills.find((drill) => drill.id === "triangle");
-  startDrill(opening);
+  const opening = openingSelection(drills);
+  if (opening) startDrill(opening);
   if (!currentId) {
     renderStatus();
     renderPoints();
