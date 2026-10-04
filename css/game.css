@@ -390,6 +390,10 @@ body {
   margin: 0 0 0.6rem;
 }
 
+.starter-angles[hidden] {
+  display: none;
+}
+
 .starter-angles button {
   min-height: 44px;
   padding: 0.35rem 0.85rem;
@@ -573,6 +577,27 @@ body {
   .starter-angles,
   .play-level {
     margin: 0.15rem 0 0;
+  }
+
+  .starter-angles {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    flex-wrap: nowrap;
+    margin: 0;
+    padding-bottom: 0.15rem;
+    background: #e7efe4;
+  }
+
+  .pitch-copy:has(> .starter-angles:not([hidden])) {
+    min-height: calc(44px + 0.15rem);
+  }
+
+  .starter-angles button {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding-right: 0.45rem;
+    padding-left: 0.45rem;
   }
 
   .pitch-copy h2 {
