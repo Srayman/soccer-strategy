@@ -115,7 +115,9 @@
   }
 
   // A missing cleared list is a fresh page: only starters can start.
-  // One ended attempt clears that drill. Picture ids are not drills.
+  // One ended attempt clears that drill, except goalkeeper step-out.
+  // That drill joins the ended list only after each picture has ended.
+  // Picture ids are not drills.
   function isLocked(drill, cleared) {
     if (!drill) return true;
     if (drill.tier === "starter") return false;
