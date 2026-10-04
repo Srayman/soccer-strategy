@@ -1,0 +1,176 @@
+:root {
+  color-scheme: light;
+  --ink: #172117;
+  --muted: #3e4a40;
+  --line: #e4ddd0;
+  --paper: #f7f4ee;
+  --card: #ffffff;
+  --grass-dark: #143322;
+  --accent: #0e7a3d;
+  --accent-ink: #ffffff;
+  --locked: #5c564e;
+  --focus: #0b4f8a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  color: var(--ink);
+  background: #e7efe4;
+  line-height: 1.4;
+}
+
+.site-header,
+.layout {
+  width: min(1120px, calc(100% - 2rem));
+  margin-inline: auto;
+}
+
+.site-header {
+  padding: 1.25rem 0 0.25rem;
+}
+
+.site-header h1 {
+  margin: 0;
+  font-size: 2rem;
+  letter-spacing: -0.02em;
+}
+
+.site-header p {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.8fr);
+  gap: 1.25rem;
+  padding: 1rem 0 2rem;
+  align-items: start;
+}
+
+.pitch-panel h2,
+.tier h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.play-status {
+  min-height: 1.5rem;
+  margin: 0.35rem 0 0.75rem;
+  font-weight: 700;
+}
+
+.pitch-frame {
+  background: var(--grass-dark);
+  border-radius: 16px;
+  padding: 0.75rem;
+  box-shadow: 0 10px 24px rgb(20 51 34 / 18%);
+}
+
+#pitch {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  background: #12301f;
+}
+
+.tier + .tier {
+  margin-top: 1.35rem;
+}
+
+.tier-note {
+  margin: 0.2rem 0 0.7rem;
+  color: var(--muted);
+}
+
+.drills {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.drill {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 0.35rem 0.7rem;
+  align-items: center;
+  padding: 0.45rem 0.55rem 0.45rem 0.75rem;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.drill-name {
+  font-weight: 700;
+}
+
+.drill-kind {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.drill-action {
+  min-height: 44px;
+  min-width: 5.75rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.drill-action:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.drill.is-locked {
+  background: #f3f0ea;
+}
+
+.drill.is-locked .drill-name,
+.drill.is-locked .drill-action {
+  color: var(--locked);
+}
+
+.drill.is-playing {
+  border-color: var(--accent);
+  background: #eef8f1;
+}
+
+.drill-action:disabled {
+  background: #e4ddd2;
+  color: var(--locked);
+  cursor: not-allowed;
+}
+
+.drill.is-playing .drill-action:disabled {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+@media (max-width: 800px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 801px) {
+  .pitch-panel {
+    position: sticky;
+    top: 1rem;
+  }
+}
