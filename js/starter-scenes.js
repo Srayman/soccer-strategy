@@ -70,7 +70,7 @@
       caption: "The ball is in the middle. A defender is tight on you.",
       ball: at(340, 660),
       teammates: Object.freeze([at(340, 660)]),
-      opponents: Object.freeze([at(526, 524)]),
+      opponents: Object.freeze([at(508, 535)]),
       learner: at(500, 540),
       goodSpots: Object.freeze([spot(460, 490, 26)]),
     }),
@@ -253,7 +253,7 @@
       learner: at(480, 700),
       targets: Object.freeze([
         mark("a", "still", 480, 700, 32),
-        mark("c", "into", 390, 730, 32),
+        mark("c", "into", 410, 691, 32),
         mark("b", "away", 600, 640, 32),
       ]),
     }),
@@ -311,7 +311,7 @@
       name: "Build-out",
       kind: "pick",
       caption: "The ball is in your hands. Opponents are behind the build-out line.",
-      ball: at(340, 990),
+      ball: at(340, 1006),
       learner: at(340, 1010),
       teammates: Object.freeze([
         at(80, 880, "wide"),

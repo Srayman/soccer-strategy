@@ -309,8 +309,12 @@ test("goalkeeper as plus-one offers a short option outside the six", () => {
   assert.deepEqual(picture.ball, { x: defender.x, y: defender.y });
   assert.ok(opponents.length >= 2);
   for (const opponent of opponents) {
-    assert.ok(opponent.y < ownBuildOutY());
     assert.equal(opponent.facing, "bottom");
+  }
+  const presser = picture.players.find((player) => player.id === "presser");
+  assert.ok(distance(presser, defender) <= 5);
+  for (const opponent of opponents) {
+    if (opponent !== presser) assert.ok(opponent.y < ownBuildOutY());
   }
   assert.ok(spot.y < six.bottom);
   assert.ok(six.bottom - spot.y <= 4);
