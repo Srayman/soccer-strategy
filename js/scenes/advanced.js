@@ -223,6 +223,13 @@
               x: 28,
               y: 30,
             }),
+            player({
+              id: "defender",
+              team: "opponent",
+              role: "defender",
+              x: 52,
+              y: 36,
+            }),
           ]),
           // Central, goal-side of the ball, near the halfway line.
           goodSpot: spot(34, 54, dragRadius),
@@ -413,6 +420,13 @@
               x: 37.66,
               y: 4,
             }),
+            player({
+              id: "defender",
+              team: "opponent",
+              role: "defender",
+              x: 44,
+              y: 12,
+            }),
           ]),
           marks: Object.freeze([
             spotMark("far-post", 30.34, 4),
@@ -446,6 +460,13 @@
               role: "overlap",
               x: 63,
               y: 28,
+            }),
+            player({
+              id: "defender",
+              team: "opponent",
+              role: "defender",
+              x: 66,
+              y: 32,
             }),
           ]),
           marks: Object.freeze([

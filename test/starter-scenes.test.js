@@ -163,7 +163,13 @@ test("stay wide holds the touchline", () => {
   const scene = byId["stay-wide"];
   const good = scene.goodSpots[0];
   assert.equal(scene.teammates.length, 1);
-  assert.equal(scene.opponents.length, 0);
+  assert.equal(scene.opponents.length, 1);
+  const defender = scene.opponents[0];
+  assert.ok(defender.x > 80);
+  assert.ok(Math.abs(defender.x - pitch.centerX) < 80);
+  assert.ok(dist(defender, good) > good.r);
+  assert.ok(dist(defender, scene.ball) > 40);
+  assert.ok(dist(defender, scene.learner) > 40);
   assert.ok(scene.learner.x < 80);
   assert.ok(Math.abs(good.x - scene.learner.x) < 15);
   assert.ok(good.y < scene.ball.y);
@@ -312,6 +318,9 @@ test("squeeze the middle leaves the far touchline and does not reach the ball", 
   assert.ok(dist(good, scene.ball) > 200);
   assert.equal(scene.teammates.length, 1);
   assert.ok(dist(scene.teammates[0], scene.ball) < 80);
+  assert.equal(scene.opponents.length, 1);
+  assert.equal(scene.opponents[0].x, scene.ball.x);
+  assert.equal(scene.opponents[0].y, scene.ball.y);
 });
 
 test("recovery run ends goal-side of the ball", () => {
@@ -365,8 +374,10 @@ test("goalkeeper step-out is one starter with three pictures", () => {
   assert.ok(dist(outside, nearSpot) > nearSpot.r);
 
   const through = frameFor(scene, "through-ball");
-  assert.equal(through.opponents.length, 0);
+  assert.equal(through.opponents.length, 1);
   assert.equal(through.teammates.length, 0);
+  assert.notEqual(through.opponents[0].name, "shooter");
+  assert.ok(dist(through.opponents[0], through.ball) > through.goodSpots[0].r);
   assert.equal(through.ball.y, pitch.sixEdgeY);
   assert.ok(through.ball.x > pitch.sixLeftX && through.ball.x < pitch.sixRightX);
   assert.equal(through.goodSpots[0].x, through.ball.x);
