@@ -1,9 +1,11 @@
 (function () {
   const api = globalThis.SoccerStrategy;
   const attemptApi = globalThis.SoccerAttempt;
+  const pointsApi = globalThis.SoccerPoints;
   const drills = api.drills;
   const listEl = document.querySelector("#drill-list");
   const statusEl = document.querySelector("#play-status");
+  const pointsEl = document.querySelector("#points");
   const pitchEl = document.querySelector("#pitch");
   const svgNS = "http://www.w3.org/2000/svg";
 
@@ -28,6 +30,7 @@
   let currentId = null;
   let attempt = null;
   let drag = null;
+  let session = pointsApi.createSession();
 
   function kindLabel(kind) {
     return kind === "drag" ? "Drag" : "Pick";
@@ -121,6 +124,17 @@
     button.setAttribute("aria-label", "Start " + drill.name);
   }
 
+  function renderPoints() {
+    pointsEl.textContent = "Points: " + session.points;
+  }
+
+  function settleEnded(previous) {
+    if (attempt && attempt.ended === true && attempt !== previous) {
+      session = pointsApi.settle(session, attempt);
+    }
+    renderPoints();
+  }
+
   function renderStatus() {
     const current = drills.find((drill) => drill.id === currentId) || null;
     const view = attempt ? attemptApi.presentation(attempt) : null;
@@ -197,8 +211,10 @@
     const view = attempt ? attemptApi.presentation(attempt) : null;
     if (!view || !view.pickable) return;
     const targetId = mark.getAttribute("data-target-id");
+    const previous = attempt;
     // pick reveals a miss answer before it marks the attempt over.
-    attempt = attemptApi.pick(attempt, targetId);
+    attempt = attemptApi.pick(previous, targetId);
+    settleEnded(previous);
     renderAttempt();
     renderStatus();
   }
@@ -278,8 +294,10 @@
     if (!view.draggable) return;
     const point = pitchPoint(event);
     if (!point) return;
+    const previous = attempt;
     // drop reveals a miss answer before it marks the attempt over.
     attempt = attemptApi.drop(started, point);
+    settleEnded(previous);
     renderAttempt();
     renderStatus();
   }
@@ -342,6 +360,7 @@
     });
     renderAttempt();
     renderStatus();
+    renderPoints();
   }
 
   listEl.addEventListener("click", (event) => {
@@ -360,4 +379,5 @@
 
   renderList();
   renderStatus();
+  renderPoints();
 })();
