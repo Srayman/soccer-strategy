@@ -2,6 +2,7 @@
   const api = globalThis.SoccerStrategy;
   const attemptApi = globalThis.SoccerAttempt;
   const pointsApi = globalThis.SoccerPoints;
+  const clearApi = globalThis.SoccerClear;
   const nextPlayApi = globalThis.SoccerNextPlay;
   const drills = api.drills;
   const listEl = document.querySelector("#drill-list");
@@ -33,6 +34,7 @@
   let attempt = null;
   let drag = null;
   let session = pointsApi.createSession();
+  let clearance = clearApi.createClearance();
 
   function kindLabel(kind) {
     return kind === "drag" ? "Drag" : "Pick";
@@ -160,6 +162,7 @@
   function settleEnded(previous) {
     if (attempt && attempt.ended === true && attempt !== previous) {
       session = pointsApi.settle(session, attempt);
+      clearance = clearApi.noteEnded(clearance, attempt);
       refreshDrills();
     }
     renderPoints();
@@ -436,7 +439,7 @@
   });
 
   // The scene asks for this when its picture changes before the try ends.
-  // The drag and pick rules stay the same. One ended attempt still clears the drill.
+  // Switching pictures replaces the playing attempt. It does not end one.
   document.addEventListener("starter-scene-change", () => {
     if (!currentId || !attempt || attempt.state !== "playing") return;
     const drill = drills.find((entry) => entry.id === currentId);

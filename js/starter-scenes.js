@@ -368,6 +368,17 @@
     });
   }
 
+  function usePicture(id) {
+    const scene = byId["goalkeeper-step-out-and-line-up"];
+    if (!scene || !scene.angles) return angleId;
+    const known = scene.angles.some(function (angle) {
+      return angle.id === id;
+    });
+    if (!known) return angleId;
+    angleId = id;
+    return angleId;
+  }
+
   function install() {
     if (typeof document === "undefined" || !globalThis.SoccerAttempt) return;
     wrapAttempt();
@@ -399,7 +410,7 @@
         const base = inner.createAttempt(drill);
         const frame = frameFor(sceneOf(drill && drill.id));
         if (!frame || !frame.goodSpots) return base;
-        return Object.freeze({
+        const made = {
           drillId: base.drillId,
           state: base.state,
           ended: base.ended,
@@ -408,7 +419,9 @@
           token: Object.freeze({ x: frame.learner.x, y: frame.learner.y }),
           goodSpots: Object.freeze(frame.goodSpots.map(cloneSpot)),
           correctionSpots: Object.freeze([]),
-        });
+        };
+        if (drill.id === "goalkeeper-step-out-and-line-up") made.pictureId = angleId;
+        return Object.freeze(made);
       },
       createPickAttempt: function (drill) {
         const base = inner.createPickAttempt(drill);
@@ -436,21 +449,31 @@
       },
       drop: function (attempt, point) {
         const frame = frameFor(sceneOf(attempt && attempt.drillId));
-        if (!frame || !frame.goodSpots || !attempt || attempt.kind === "pick") {
-          return inner.drop(attempt, point);
+        const pictureId =
+          attempt && attempt.drillId === "goalkeeper-step-out-and-line-up"
+            ? attempt.pictureId || angleId
+            : "";
+        function stamp(result) {
+          if (!pictureId || !result || result === attempt) return result;
+          return Object.freeze(Object.assign({}, result, { pictureId: pictureId }));
         }
-        return inner.drop(
-          Object.freeze({
-            drillId: attempt.drillId,
-            state: attempt.state,
-            ended: attempt.ended,
-            confirmation: attempt.confirmation,
-            answerShown: attempt.answerShown,
-            token: attempt.token,
-            goodSpots: Object.freeze(frame.goodSpots.map(cloneSpot)),
-            correctionSpots: attempt.correctionSpots,
-          }),
-          point
+        if (!frame || !frame.goodSpots || !attempt || attempt.kind === "pick") {
+          return stamp(inner.drop(attempt, point));
+        }
+        return stamp(
+          inner.drop(
+            Object.freeze({
+              drillId: attempt.drillId,
+              state: attempt.state,
+              ended: attempt.ended,
+              confirmation: attempt.confirmation,
+              answerShown: attempt.answerShown,
+              token: attempt.token,
+              goodSpots: Object.freeze(frame.goodSpots.map(cloneSpot)),
+              correctionSpots: attempt.correctionSpots,
+            }),
+            point
+          )
         );
       },
     });
@@ -706,6 +729,7 @@
     byId: byId,
     frameFor: frameFor,
     markersFor: markersFor,
+    usePicture: usePicture,
     install: install,
   });
 });

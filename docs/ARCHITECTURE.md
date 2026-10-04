@@ -14,6 +14,8 @@ Progress records a finished attempt and whether a tier is unlocked.
 
 A finished attempt clears that drill, including a miss. Next stays locked until every starter is cleared. Advanced stays locked until every next drill is cleared.
 
+Goalkeeper step-out is one starter drill with three pictures. That drill is cleared only after one attempt has ended on each picture. One ended attempt does not clear it. Switching pictures before the drag does not count as an ended attempt. Points and tier locks stay on the ended-drill list.
+
 Points are awarded when the attempt ends. A miss adds 1. A correct first try adds 3. A later ending adds 1 and cannot add 3.
 
 The goalkeeper first-try key is the drill plus the angle. Other drills use the drill id.
