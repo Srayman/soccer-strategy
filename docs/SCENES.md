@@ -96,7 +96,7 @@ The good spot is a curved run back toward that goal. The run ends goal-side of t
 
 ### Goalkeeper step-out and line-up
 
-This is one starter. It has three pictures. It is not three drills. The learner is the goalkeeper. The learner can switch angles before the drag. The angles are central, near post, and through-ball versus a set close shot. Near post is an angle in this drill. It is not a second drill. There is no outfield crowd. The central picture and the near-post picture each have one shooter. The through-ball picture has no shooter.
+This is one starter. It has three pictures. It is not three drills. The learner is the goalkeeper. The learner can switch angles before the drag. The angles are central, near post, and one free ball. Near post is an angle in this drill. It is not a second drill. There is no outfield crowd. The central picture and the near-post picture each have one shooter. The through-ball picture has no shooter.
 
 The central picture has the ball in front of the goal, outside the six-yard box. The good spot is one or two steps off the goal line, in the center of the goal, on the line from the ball to the middle of the goal. The penalty spot is the miss.
 
