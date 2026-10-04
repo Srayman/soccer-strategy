@@ -589,6 +589,10 @@ body {
     background: #e7efe4;
   }
 
+  .pitch-copy:has(> .starter-angles:not([hidden])) {
+    min-height: calc(44px + 0.15rem);
+  }
+
   .starter-angles button {
     flex: 1 1 auto;
     min-width: 0;
