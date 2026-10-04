@@ -86,7 +86,7 @@ test("starter progress and locked tiers say what is left", () => {
   assert.doesNotMatch(lockedLeft(3, "starter"), /\b(pass|fail|grade|unlock)\b/i);
 });
 
-test("the page shows a score, opens Triangle on level 1, and keeps the spot", () => {
+test("the page shows a score, opens the first starter, and keeps the spot", () => {
   const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
   const game = fs.readFileSync(path.join(root, "js", "game.js"), "utf8");
   const css = fs.readFileSync(path.join(root, "css", "game.css"), "utf8");
@@ -105,13 +105,16 @@ test("the page shows a score, opens Triangle on level 1, and keeps the spot", ()
   assert.match(game, /lockedLeft\(/);
   assert.match(game, /view\.spotLine/);
   assert.match(game, /view\.correctionSpots\.forEach/);
-  assert.match(game, /id === "triangle"/);
   assert.doesNotMatch(game, /\b(pass|fail|grade)\b/i);
   assert.doesNotMatch(game, /unlock/i);
   assert.match(css, /\.site-header \.points/);
 
-  const tail = game.slice(game.lastIndexOf("renderList();"));
-  assert.match(tail, /triangle/);
+  const tail = game.slice(game.lastIndexOf("function openingSelection"));
+  assert.match(tail, /tier === "starter"/);
+  assert.match(tail, /id === "triangle"/);
+  assert.match(tail, /name === "Triangle"/);
+  assert.match(tail, /if \(opening\) startDrill\(opening\)/);
+  assert.doesNotMatch(tail, /find\(\(drill\) => drill\.id === "triangle"\)/);
   assert.doesNotMatch(tail, /settle\(/);
 });
 
