@@ -497,3 +497,103 @@ test("level 1 offers two or three wrong spots and a wrong pick is a miss", () =>
   correctSession = points.settle(correctSession, first);
   assert.equal(correctSession.points, 3);
 });
+
+test("a first correct try on level 2 adds 3 and celebrates like level 1", () => {
+  const attempt = harness.attempt;
+  const points = require("../js/points.js");
+  const { celebrationFor } = require("../js/celebrate.js");
+  const css = fs.readFileSync(path.join(root, "css", "game.css"), "utf8");
+  const game = fs.readFileSync(path.join(root, "js", "game.js"), "utf8");
+  const open = drills.find((drill) => drill.id === "open-body");
+
+  const level1 = attempt.pick(attempt.createLevelAttempt(open, 1), "b");
+  const level1Mark = celebrationFor(level1);
+  assert.equal(points.settle(points.createSession(), level1).points, 3);
+  assert.equal(level1.state, "correct");
+  assert.ok(level1Mark);
+  assert.equal(level1Mark.stars.length, 8);
+  assert.equal(level1Mark.disc.r, 240);
+  assert.equal(level1Mark.ring.r, 160);
+
+  const playing = attempt.createLevelAttempt(open, 2);
+  const good = playing.goodSpots[0];
+  assert.equal(celebrationFor(playing), null);
+  const scored = attempt.drop(playing, { x: good.x, y: good.y });
+  assert.equal(scored.state, "correct");
+  assert.equal(scored.ended, true);
+  assert.equal(scored.drillId, open.id);
+  assert.equal(scored.confirmation, "You found a spot.");
+  assert.deepEqual(scored.correctionSpots, []);
+  const scoredView = attempt.presentation(scored);
+  assert.equal(scoredView.visibleTargets.length, 0);
+  assert.equal(scoredView.confirmation, "You found a spot.");
+  const firstSession = points.settle(points.createSession(), scored);
+  assert.equal(firstSession.points, 3);
+  const level2Mark = celebrationFor(scored);
+  assert.equal(level2Mark, level1Mark);
+  assert.match(level2Mark.shapes.big, /^-?[\d.]+,-70\.00 /);
+  assert.match(level2Mark.shapes.small, /^-?[\d.]+,-46\.00 /);
+
+  const missed = attempt.drop(attempt.createLevelAttempt(open, 2), { x: 1, y: 1 });
+  assert.equal(missed.state, "miss");
+  assert.equal(missed.ended, true);
+  assert.equal(celebrationFor(missed), null);
+  let session = points.settle(points.createSession(), missed);
+  assert.equal(session.points, 1);
+
+  const wrong = (playing.wrongChoices || []).concat(playing.levelMarks).find((mark) => {
+    return mark.id !== "b";
+  });
+  const wrongDrop = attempt.drop(attempt.createLevelAttempt(open, 2), {
+    x: wrong.x,
+    y: wrong.y,
+  });
+  assert.equal(wrongDrop.state, "miss");
+  assert.equal(celebrationFor(wrongDrop), null);
+  assert.equal(points.settle(points.createSession(), wrongDrop).points, 1);
+
+  const later = attempt.drop(attempt.createLevelAttempt(open, 2), { x: good.x, y: good.y });
+  assert.equal(later.state, "correct");
+  session = points.settle(session, later);
+  assert.equal(session.points, 2);
+  assert.equal(celebrationFor(later), level1Mark);
+  assert.equal(attempt.presentation(later).visibleTargets.length, 0);
+
+  const again = attempt.drop(attempt.createLevelAttempt(open, 2), { x: good.x, y: good.y });
+  assert.equal(points.settle(firstSession, again).points, 4);
+  assert.equal(celebrationFor(again), level1Mark);
+
+  const render = game.slice(game.indexOf("function renderAttempt"));
+  assert.ok(render.indexOf("visibleTargets") < render.indexOf("paintCelebration"));
+  assert.match(render, /celebrationFor\(attempt\)/);
+  assert.match(render, /if \(mark\) layer\.append\(paintCelebration\(mark\)\)/);
+  assert.doesNotMatch(game, /celebrationFor\([^)]*level/);
+  assert.match(css, /@keyframes burst-pop/);
+  assert.match(css, /16% \{\s*opacity: 1;/);
+  assert.doesNotMatch(css, /\[data-level="2"\][^{]*\{[^}]*opacity:\s*0/);
+
+  scenes.usePicture("central");
+  for (const drill of drills) {
+    const level2 = attempt.createLevelAttempt(drill, 2);
+    const spot = level2.goodSpots[0];
+    const ended = attempt.drop(level2, { x: spot.x, y: spot.y });
+    assert.equal(ended.state, "correct", drill.id);
+    assert.equal(ended.ended, true, drill.id);
+    assert.equal(points.settle(points.createSession(), ended).points, 3, drill.id);
+    assert.equal(celebrationFor(ended), level1Mark, drill.id);
+    assert.equal(attempt.presentation(ended).visibleTargets.length, 0, drill.id);
+    const missed = attempt.drop(attempt.createLevelAttempt(drill, 2), { x: -1000, y: -1000 });
+    assert.equal(missed.state, "miss", drill.id);
+    assert.equal(celebrationFor(missed), null, drill.id);
+    let book = points.settle(points.createSession(), missed);
+    assert.equal(book.points, 1, drill.id);
+    const laterEnding = attempt.drop(attempt.createLevelAttempt(drill, 2), {
+      x: spot.x,
+      y: spot.y,
+    });
+    book = points.settle(book, laterEnding);
+    assert.equal(laterEnding.state, "correct", drill.id);
+    assert.equal(book.points, 2, drill.id);
+    assert.equal(celebrationFor(laterEnding), level1Mark, drill.id);
+  }
+});
