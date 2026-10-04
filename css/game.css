@@ -372,6 +372,36 @@ body {
   pointer-events: none;
 }
 
+.play-level {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.35rem 0 0.15rem;
+}
+
+.play-level button {
+  min-height: 44px;
+  padding: 0.35rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.play-level button[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.play-level button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
 /* Fixed page unless the window is both wider than 800px and taller than 500px.
    390x626 and 700x400 stay inside. 900x600 and 1200x600 keep the full-width field. */
 @media (max-width: 800px), (max-height: 500px) {
@@ -448,7 +478,8 @@ body {
     margin: 0.1rem 0;
   }
 
-  .starter-angles {
+  .starter-angles,
+  .play-level {
     margin: 0.15rem 0 0;
   }
 

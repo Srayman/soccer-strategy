@@ -401,15 +401,97 @@
       return Object.freeze({ x: spot.x, y: spot.y, r: spot.r * 2 });
     }
 
+    function drawnRadius(spot, fromDrag) {
+      // A drag spot is already drawn at twice its stored radius.
+      // Level 1 keeps that drawn width. It does not shrink.
+      return fromDrag ? cloneSpot(spot).r : spot.r;
+    }
+
+    function marksFor(frame, level) {
+      const fromDrag = Boolean(frame.goodSpots) && !frame.targets;
+      const source = frame.targets || frame.goodSpots || [];
+      return source.map(function (spot) {
+        const drawn = drawnRadius(spot, fromDrag);
+        return Object.freeze({
+          id: spot.id || inner.correctTarget.id,
+          x: spot.x,
+          y: spot.y,
+          r: level === 2 ? drawn * 2 : drawn,
+        });
+      });
+    }
+
+    function originFor(frame, scene) {
+      const point = (frame && frame.learner) || (scene && scene.learner) || inner.start;
+      return Object.freeze({ x: point.x, y: point.y });
+    }
+
+    function insideMark(mark, point) {
+      const dx = point.x - mark.x;
+      const dy = point.y - mark.y;
+      return dx * dx + dy * dy <= mark.r * mark.r;
+    }
+
+    function nearestMark(marks, point) {
+      let best = null;
+      let bestDistance = Infinity;
+      marks.forEach(function (mark) {
+        const dx = point.x - mark.x;
+        const dy = point.y - mark.y;
+        const distance = dx * dx + dy * dy;
+        if (distance < bestDistance) {
+          best = mark;
+          bestDistance = distance;
+        }
+      });
+      return best;
+    }
+
+    function containingMarks(marks, point) {
+      if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return [];
+      return marks.filter(function (mark) {
+        return insideMark(mark, point);
+      });
+    }
+
+    function withLevel(result, attempt, fields) {
+      const next = Object.assign({}, result, fields || {});
+      if (attempt.level) next.level = attempt.level;
+      if (attempt.levelMarks) next.levelMarks = attempt.levelMarks;
+      if (attempt.pictureId) next.pictureId = attempt.pictureId;
+      if (attempt.token && !next.token) next.token = attempt.token;
+      return Object.freeze(next);
+    }
+
     globalThis.SoccerAttempt = Object.freeze({
       goodSpots: inner.goodSpots,
       start: inner.start,
       markedTargets: inner.markedTargets,
       correctTarget: inner.correctTarget,
-      presentation: inner.presentation,
+      presentation: function (attempt) {
+        const view = inner.presentation(attempt);
+        if (!attempt || !attempt.levelMarks) return view;
+        const playing = attempt.state === "playing" && attempt.ended === false;
+        return Object.freeze(
+          Object.assign({}, view, {
+            targets: attempt.levelMarks,
+            pickable: attempt.level === 1 && playing,
+            draggable: attempt.level === 2 && playing,
+          })
+        );
+      },
       revealAnswer: inner.revealAnswer,
       endAttempt: inner.endAttempt,
-      pick: inner.pick,
+      pick: function (attempt, targetId) {
+        const result = inner.pick(attempt, targetId);
+        if (!attempt || !attempt.levelMarks || result === attempt) return result;
+        const chosen = attempt.levelMarks.find(function (mark) {
+          return mark.id === targetId;
+        });
+        const fields = {};
+        if (chosen) fields.token = Object.freeze({ x: chosen.x, y: chosen.y });
+        return withLevel(result, attempt, fields);
+      },
       createAttempt: function (drill) {
         const base = inner.createAttempt(drill);
         const frame = frameFor(sceneOf(drill && drill.id));
@@ -451,34 +533,81 @@
           correctionSpots: Object.freeze([]),
         });
       },
+      createLevelAttempt: function (drill, level) {
+        const chosen = level === 2 ? 2 : 1;
+        const scene = sceneOf(drill && drill.id);
+        const frame = frameFor(scene);
+        const marks = frame ? marksFor(frame, chosen) : [];
+        if (!drill || !frame || marks.length === 0) {
+          if (drill && drill.kind === "drag") return inner.createAttempt(drill);
+          if (drill && drill.kind === "pick") return inner.createPickAttempt(drill);
+          throw new Error("A level attempt needs a drill.");
+        }
+        const frozenMarks = Object.freeze(marks);
+        const origin = originFor(frame, scene);
+        const pictureId =
+          drill.id === "goalkeeper-step-out-and-line-up" ? angleId : "";
+        if (chosen === 1) {
+          const made = {
+            kind: "pick",
+            drillId: drill.id,
+            state: "playing",
+            ended: false,
+            confirmation: "",
+            answerShown: false,
+            targets: frozenMarks,
+            correctionSpots: Object.freeze([]),
+            token: origin,
+            level: 1,
+            levelMarks: frozenMarks,
+          };
+          if (pictureId) made.pictureId = pictureId;
+          return Object.freeze(made);
+        }
+        const correct = frozenMarks.filter(function (mark) {
+          return mark.id === inner.correctTarget.id;
+        });
+        const made = {
+          drillId: drill.id,
+          state: "playing",
+          ended: false,
+          confirmation: "",
+          answerShown: false,
+          token: origin,
+          goodSpots: Object.freeze(
+            correct.map(function (mark) {
+              return Object.freeze({ x: mark.x, y: mark.y, r: mark.r });
+            })
+          ),
+          correctionSpots: Object.freeze([]),
+          level: 2,
+          levelMarks: frozenMarks,
+        };
+        if (pictureId) made.pictureId = pictureId;
+        return Object.freeze(made);
+      },
       drop: function (attempt, point) {
-        const frame = frameFor(sceneOf(attempt && attempt.drillId));
         const pictureId =
           attempt && attempt.drillId === "goalkeeper-step-out-and-line-up"
             ? attempt.pictureId || angleId
             : "";
-        function stamp(result) {
-          if (!pictureId || !result || result === attempt) return result;
-          return Object.freeze(Object.assign({}, result, { pictureId: pictureId }));
+        const result = inner.drop(attempt, point);
+        if (!result || result === attempt) return result;
+        const fields = {};
+        if (pictureId) fields.pictureId = pictureId;
+        if (attempt && attempt.levelMarks) {
+          const hits = containingMarks(attempt.levelMarks, point);
+          const correctHits =
+            result.state === "correct"
+              ? hits.filter(function (mark) {
+                  return mark.id === inner.correctTarget.id;
+                })
+              : [];
+          const landed = nearestMark(correctHits.length ? correctHits : hits, point);
+          if (landed) fields.token = Object.freeze({ x: landed.x, y: landed.y });
         }
-        if (!frame || !frame.goodSpots || !attempt || attempt.kind === "pick") {
-          return stamp(inner.drop(attempt, point));
-        }
-        return stamp(
-          inner.drop(
-            Object.freeze({
-              drillId: attempt.drillId,
-              state: attempt.state,
-              ended: attempt.ended,
-              confirmation: attempt.confirmation,
-              answerShown: attempt.answerShown,
-              token: attempt.token,
-              goodSpots: Object.freeze(frame.goodSpots.map(cloneSpot)),
-              correctionSpots: attempt.correctionSpots,
-            }),
-            point
-          )
-        );
+        if (!fields.pictureId && !(attempt && attempt.levelMarks)) return result;
+        return withLevel(result, attempt, fields);
       },
     });
   }
@@ -700,10 +829,11 @@
       caption.hidden = captionText === "";
       legend.hidden = false;
       caption.textContent = captionText;
-      legend.textContent =
-        scene.kind === "pick"
-          ? "White is you. Blue is your team. Red is the other team. Tap a ring."
-          : "White is you. Blue is your team. Red is the other team.";
+      const levelButton = document.querySelector("#play-level button[aria-pressed='true']");
+      const levelTwo = Boolean(levelButton && levelButton.dataset.level === "2");
+      legend.textContent = levelTwo
+        ? "White is you. Blue is your team. Red is the other team."
+        : "White is you. Blue is your team. Red is the other team. Tap a ring.";
       (frame.guides || scene.guides || []).forEach(function (guide) {
         layer.append(
           svgEl("line", {
@@ -736,7 +866,11 @@
       (frame.teammates || []).forEach(function (actor) {
         drawActor(layer, actor, "scene-team", "Teammate");
       });
-      if (scene.kind === "pick" && (frame.learner || scene.learner)) {
+      if (
+        scene.kind === "pick" &&
+        (frame.learner || scene.learner) &&
+        !document.querySelector("#drag-token")
+      ) {
         drawYou(layer, frame.learner || scene.learner);
       }
       if (frame.ball) drawBall(layer, frame.ball, actors);
