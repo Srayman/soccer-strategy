@@ -10,11 +10,13 @@
     <header class="site-header">
       <h1>Soccer strategy</h1>
       <p>Look down on the pitch and start a starter drill.</p>
+      <p id="points" class="points" aria-live="polite">Points: 0</p>
     </header>
     <main class="layout">
       <section class="pitch-panel" aria-labelledby="pitch-heading">
         <h2 id="pitch-heading">Pitch</h2>
         <p id="play-status" class="play-status" aria-live="polite"></p>
+        <button id="next-play" type="button" class="next-play" disabled>Next play</button>
         <div class="pitch-frame">
           <svg
             id="pitch"
@@ -89,6 +91,8 @@
     </main>
     <script src="js/catalog.js"></script>
     <script src="js/attempt.js"></script>
+    <script src="js/points.js"></script>
+    <script src="js/next-play.js"></script>
     <script src="js/starter-scenes.js"></script>
     <script src="js/game.js"></script>
   </body>

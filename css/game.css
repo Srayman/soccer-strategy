@@ -45,6 +45,12 @@ body {
   color: var(--muted);
 }
 
+.site-header .points {
+  margin-top: 0.55rem;
+  color: var(--ink);
+  font-weight: 700;
+}
+
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.8fr);
@@ -61,8 +67,47 @@ body {
 
 .play-status {
   min-height: 1.5rem;
-  margin: 0.35rem 0 0.75rem;
+  margin: 0.35rem 0 0.5rem;
   font-weight: 700;
+}
+
+.next-play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 7.5rem;
+  margin: 0 0 0.75rem;
+  padding: 0 1rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.next-play:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.next-play:disabled {
+  background: #e4ddd2;
+  color: var(--locked);
+  cursor: not-allowed;
+}
+
+.next-moment,
+.next-moment-runner {
+  pointer-events: none;
+}
+
+.next-moment-runner {
+  fill: #f5f7f2;
+  stroke: #0e7a3d;
+  stroke-width: 6;
 }
 
 .pitch-frame {

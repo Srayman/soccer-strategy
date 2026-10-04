@@ -16,10 +16,16 @@ test("the playable page is index.html at the repository root", () => {
   assert.match(html, /href="css\/game\.css"/);
   assert.match(html, /src="js\/catalog\.js"/);
   assert.match(html, /src="js\/attempt\.js"/);
+  assert.match(html, /src="js\/points\.js"/);
+  assert.match(html, /src="js\/next-play\.js"/);
   assert.match(html, /src="js\/game\.js"/);
+  assert.match(html, /id="points"/);
+  assert.match(html, /id="next-play"/);
   assert.ok(
     html.indexOf('src="js/catalog.js"') < html.indexOf('src="js/attempt.js"') &&
-      html.indexOf('src="js/attempt.js"') < html.indexOf('src="js/game.js"')
+      html.indexOf('src="js/attempt.js"') < html.indexOf('src="js/points.js"') &&
+      html.indexOf('src="js/points.js"') < html.indexOf('src="js/next-play.js"') &&
+      html.indexOf('src="js/next-play.js"') < html.indexOf('src="js/game.js"')
   );
   assert.doesNotMatch(html, /dist\//);
 });
