@@ -337,11 +337,28 @@
   let angleId = "central";
   let wrapped = false;
 
+  function playedScene(id) {
+    const play = globalThis.SoccerScenePlay;
+    if (!id || !play || typeof play.sceneFor !== "function") return null;
+    if (byId[id]) return null;
+    return play.sceneFor(id);
+  }
+
+  function sceneOf(id) {
+    if (!id) return null;
+    return byId[id] || playedScene(id);
+  }
+
   function frameFor(scene, which) {
     if (!scene) return null;
     if (!scene.pictures) return scene;
     const id = which || angleId;
-    return scene.pictures[id] || scene.pictures.central;
+    if (scene.pictures[id]) return scene.pictures[id];
+    if (scene.pictures.central) return scene.pictures.central;
+    if (scene.angles && scene.angles[0]) {
+      return scene.pictures[scene.angles[0].id] || null;
+    }
+    return null;
   }
 
   function markersFor(scene) {
@@ -367,10 +384,6 @@
 
     function cloneSpot(spot) {
       return Object.freeze({ x: spot.x, y: spot.y, r: spot.r });
-    }
-
-    function sceneOf(drillId) {
-      return byId[drillId] || null;
     }
 
     globalThis.SoccerAttempt = Object.freeze({
@@ -462,20 +475,32 @@
       el.append(title);
     }
 
+    function useFirstPicture(drillId) {
+      const scene = sceneOf(drillId);
+      if (scene && scene.angles && scene.angles[0]) angleId = scene.angles[0].id;
+      else angleId = "central";
+    }
+
     listEl.addEventListener(
       "click",
       function (event) {
         const button = event.target.closest("button[data-action='start']");
         if (!button) return;
-        angleId = "central";
+        const item = button.closest("[data-drill-id]");
+        useFirstPicture(item && item.dataset.drillId);
       },
       true
     );
 
+    document.addEventListener("starter-scene-reset", function (event) {
+      const detail = event.detail || {};
+      useFirstPicture(detail.drillId);
+    });
+
     function currentScene() {
       const item = document.querySelector(".drill.is-playing");
       if (!item) return null;
-      return byId[item.dataset.drillId] || null;
+      return sceneOf(item.dataset.drillId);
     }
 
     function slot(id, className) {
@@ -619,9 +644,10 @@
         return;
       }
       const frame = frameFor(scene);
-      caption.hidden = false;
+      const captionText = frame.caption || scene.caption || "";
+      caption.hidden = captionText === "";
       legend.hidden = false;
-      caption.textContent = frame.caption || scene.caption || "";
+      caption.textContent = captionText;
       legend.textContent =
         scene.kind === "pick"
           ? "White is you. Blue is your team. Red is the other team. Tap a ring."
