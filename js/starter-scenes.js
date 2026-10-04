@@ -555,6 +555,7 @@
     }
 
     const playerRadius = 18;
+    const ballRadius = 24;
 
     function drawActor(layer, actor, className, title) {
       const g = svgEl("g", {
@@ -577,8 +578,8 @@
           coverDistance = distance;
         }
       });
-      if (!cover || coverDistance > playerRadius) return ball;
-      const gap = playerRadius + 4;
+      if (!cover || coverDistance > playerRadius + ballRadius * 0.35) return ball;
+      const gap = playerRadius + ballRadius * 0.55;
       if (coverDistance < 1) return { x: cover.x, y: cover.y + gap };
       return {
         x: cover.x + ((ball.x - cover.x) / coverDistance) * gap,
@@ -593,9 +594,9 @@
         transform: "translate(" + place.x + " " + place.y + ")",
         "data-ball": "true",
       });
-      g.append(svgEl("circle", { r: 16 }));
-      g.append(svgEl("circle", { class: "scene-ball-spot", cx: -4, cy: -2, r: 4.4 }));
-      g.append(svgEl("circle", { class: "scene-ball-spot", cx: 6, cy: 4, r: 3.2 }));
+      g.append(svgEl("circle", { r: ballRadius }));
+      g.append(svgEl("circle", { class: "scene-ball-spot", cx: -6, cy: -3, r: 6.5 }));
+      g.append(svgEl("circle", { class: "scene-ball-spot", cx: 8, cy: 5, r: 4.6 }));
       addTitle(g, "Ball");
       layer.append(g);
     }

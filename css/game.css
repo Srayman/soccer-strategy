@@ -335,7 +335,7 @@ body {
 .scene-ball circle {
   fill: #f7f4ee;
   stroke: #172117;
-  stroke-width: 4;
+  stroke-width: 6;
 }
 
 .scene-ball-spot {
@@ -497,6 +497,11 @@ body {
     transform-box: fill-box;
     transform-origin: center;
     transform: rotate(90deg);
+  }
+
+  /* End labels stay in the goal padding. Upright text there runs off the viewBox. */
+  #pitch text.pitch-end {
+    transform: none;
   }
 
   .layout {
