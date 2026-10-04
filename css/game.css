@@ -51,8 +51,10 @@ body {
 
 .site-header .points {
   margin: 0 0 0 auto;
-  color: var(--ink);
+  color: var(--accent);
   font-weight: 700;
+  font-size: 1.75rem;
+  line-height: 1.1;
 }
 
 .help-control {
@@ -536,6 +538,7 @@ body {
 
   .site-header .points {
     margin-top: 0;
+    font-size: 1.2rem;
   }
 
   .layout {
