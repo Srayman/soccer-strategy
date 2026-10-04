@@ -424,6 +424,17 @@
     startDrill(nextPlayApi.nextInTier(drills, currentId));
   });
 
+  // Starter scenes ask for this when the goalkeeper picture changes
+  // before the drag. The drag rules stay the same.
+  document.addEventListener("starter-scene-change", () => {
+    if (!currentId || !attempt || attempt.state !== "playing") return;
+    const drill = drills.find((entry) => entry.id === currentId);
+    if (!drill || drill.kind !== "drag") return;
+    drag = null;
+    attempt = attemptApi.createAttempt(drill);
+    sync();
+  });
+
   renderList();
   renderStatus();
   renderPoints();

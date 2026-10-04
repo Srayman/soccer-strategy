@@ -111,6 +111,8 @@ body {
 }
 
 .pitch-frame {
+  display: flex;
+  justify-content: center;
   background: var(--grass-dark);
   border-radius: 16px;
   padding: 0.75rem;
@@ -119,8 +121,11 @@ body {
 
 #pitch {
   display: block;
-  width: 100%;
+  width: auto;
   height: auto;
+  max-width: 100%;
+  max-height: calc(100vh - 12rem);
+  margin-inline: auto;
   border-radius: 10px;
   background: #12301f;
 }
@@ -258,6 +263,101 @@ body {
 .marked-target:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
+}
+
+.starter-caption,
+.starter-legend {
+  margin: 0.15rem 0 0.45rem;
+}
+
+.starter-caption {
+  font-weight: 700;
+}
+
+.starter-legend {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.starter-angles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 0.6rem;
+}
+
+.starter-angles button {
+  min-height: 44px;
+  padding: 0.35rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.starter-angles button[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.starter-angles button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.scene-guide {
+  fill: none;
+  stroke: #f5f7f2;
+  stroke-width: 3;
+  stroke-dasharray: 8 8;
+}
+
+.scene-guide-label {
+  fill: #f5f7f2;
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.scene-player circle {
+  stroke: #f5f7f2;
+  stroke-width: 3;
+}
+
+.scene-team circle {
+  fill: #1d6fd6;
+}
+
+.scene-opponent circle {
+  fill: #d23b3b;
+}
+
+.scene-ball circle {
+  fill: #f7f4ee;
+  stroke: #172117;
+  stroke-width: 2;
+}
+
+.scene-ball-spot {
+  fill: #172117;
+  stroke: none;
+}
+
+#starter-scene-layer {
+  pointer-events: none;
+}
+
+.you-label {
+  fill: #0b4f8a;
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-anchor: middle;
+  pointer-events: none;
 }
 
 @media (max-width: 800px) {

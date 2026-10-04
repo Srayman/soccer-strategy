@@ -200,12 +200,19 @@
     });
   }
 
+  // The correct choice is the marked target with this fixed id.
+  // A scene can move that mark. The id does not change.
+  function correctMark(attempt) {
+    const mark = attempt.targets.find((target) => target.id === correctTarget.id);
+    return mark || correctTarget;
+  }
+
   function revealPickAnswer(attempt) {
     if (!canDrop(attempt)) return attempt;
     return pickSnapshot({
       ...attempt,
       answerShown: true,
-      correctionSpots: [correctTarget],
+      correctionSpots: [correctMark(attempt)],
     });
   }
 
