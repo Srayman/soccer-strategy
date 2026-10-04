@@ -26,4 +26,4 @@ There is no saved storage, so points reset when the page closes.
 
 ## Publishing
 
-GitHub Actions publishes the built site from main. An admin sets the Pages source to GitHub Actions once.
+GitHub Pages deploys the main branch as static HTML, from the repository root, and the game page is index.html at that root.

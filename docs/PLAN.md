@@ -109,4 +109,4 @@ Accounts, grades, physics, live better-or-worse, offside traps, full team pressi
 
 ## Publishing
 
-GitHub Pages serves the game from main once the game is playable.
+GitHub Pages deploys the main branch as static HTML, from the repository root, and the game page is index.html at that root.
