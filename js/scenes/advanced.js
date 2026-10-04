@@ -127,7 +127,7 @@
       pictures: Object.freeze([
         picture({
           id: "someone-else-takes-the-runner",
-          ball: null,
+          ball: point(58, 68),
           players: Object.freeze([
             player({
               id: "learner",
@@ -156,7 +156,7 @@
         }),
         picture({
           id: "learner-goes-with-the-runner",
-          ball: null,
+          ball: point(60, 66),
           players: Object.freeze([
             player({
               id: "learner",

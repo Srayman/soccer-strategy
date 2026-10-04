@@ -64,7 +64,8 @@ test("advanced scenes match the catalog and nothing else", () => {
     for (const picture of scene.pictures) {
       learner(picture);
       for (const player of picture.players) onPitch(player);
-      if (picture.ball) onPitch(picture.ball);
+      assert.ok(picture.ball, scene.id + " " + picture.id);
+      onPitch(picture.ball);
       if (scene.kind === "drag") {
         assert.equal(picture.marks, undefined);
         onPitch(picture.goodSpot);
@@ -131,8 +132,8 @@ test("zones stays central or goes with the closest runner", () => {
 
   const stay = scene.pictures[0];
   assert.equal(stay.id, "someone-else-takes-the-runner");
-  assert.equal(stay.ball, null);
   const stayRunner = one(stay, "wide-runner");
+  assert.deepEqual(stay.ball, { x: stayRunner.x, y: stayRunner.y });
   const cover = one(stay, "covering-defender");
   assert.ok(
     distance(cover, stayRunner) < distance(learner(stay), stayRunner)
@@ -144,6 +145,7 @@ test("zones stays central or goes with the closest runner", () => {
   const go = scene.pictures[1];
   assert.equal(go.id, "learner-goes-with-the-runner");
   const goRunner = one(go, "wide-runner");
+  assert.deepEqual(go.ball, { x: goRunner.x, y: goRunner.y });
   const sliders = byRole(go, "sliding-defender");
   assert.ok(sliders.length >= 2);
   for (const slider of sliders) {

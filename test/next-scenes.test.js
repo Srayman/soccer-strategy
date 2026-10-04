@@ -130,7 +130,8 @@ test("next scenes match the catalog and nothing else", () => {
         1
       );
       for (const player of picture.players) onPitch(player);
-      if (picture.ball) onPitch(picture.ball);
+      assert.ok(picture.ball, scene.id + " " + picture.id);
+      onPitch(picture.ball);
       if (scene.kind === "drag") {
         assert.equal(picture.marks, undefined);
         onPitch(picture.goodSpot);
