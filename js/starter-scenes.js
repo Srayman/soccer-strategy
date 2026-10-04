@@ -572,10 +572,11 @@
       }
 
       const candidates = [];
+      // Start above the good spot so the choices stay in view with it.
       for (let ring = 1; ring <= 10; ring += 1) {
         const dist = radius * 2 + 8 * ring;
         for (let step = 0; step < 16; step += 1) {
-          const angle = (Math.PI * 2 * step) / 16 + ring * 0.35;
+          const angle = -Math.PI / 2 + (Math.PI * 2 * step) / 16 + ring * 0.2;
           candidates.push({
             x: correct.x + Math.cos(angle) * dist,
             y: correct.y + Math.sin(angle) * dist,
