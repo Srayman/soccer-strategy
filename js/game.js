@@ -86,6 +86,10 @@
     name.className = "drill-name";
     name.textContent = drill.name;
 
+    const idea = document.createElement("p");
+    idea.className = "drill-idea";
+    idea.textContent = drill.idea;
+
     const kind = document.createElement("span");
     kind.className = "drill-kind";
     kind.textContent = kindLabel(drill.kind);
@@ -93,7 +97,7 @@
     const button = document.createElement("button");
     button.type = "button";
     button.className = "drill-action";
-    item.append(name, kind, button);
+    item.append(name, idea, kind, button);
     paintButton(item, drill, button);
     return item;
   }
@@ -202,11 +206,8 @@
       return;
     }
 
-    statusEl.textContent = "Playing " + current.name + ".";
-    pitchEl.setAttribute(
-      "aria-label",
-      "Top-down soccer pitch. Playing " + current.name + "."
-    );
+    statusEl.textContent = current.idea;
+    pitchEl.setAttribute("aria-label", "Top-down soccer pitch. " + current.idea);
   }
 
   function svgEl(name, attrs) {
