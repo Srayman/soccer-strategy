@@ -151,7 +151,7 @@ test("get open leaves the defender and the ball", () => {
   const good = scene.goodSpots[0];
   assert.equal(scene.opponents.length, 1);
   assert.ok(Math.abs(scene.ball.x - pitch.centerX) < 40);
-  assert.ok(dist(scene.learner, defender) < 40);
+  assert.ok(dist(scene.learner, defender) < 10);
   const pocket = dist(good, defender);
   assert.ok(pocket >= 50 && pocket <= 100);
   assert.ok(dist(good, scene.ball) > good.r + 40);
@@ -395,6 +395,8 @@ test("check away picks the move into open space", () => {
   assert.ok(toBall.x * toInto.x + toBall.y * toInto.y > 0);
   const toStill = { x: still.x - defender.x, y: still.y - defender.y };
   assert.ok(toBall.x * toStill.x + toBall.y * toStill.y < 0);
+  assert.ok(dist(into, defender) < 20);
+  assert.ok(dist(into, scene.ball) < dist(defender, scene.ball));
 });
 
 test("triangle picks the open corner", () => {
@@ -465,6 +467,7 @@ test("build-out picks the short pass to the open wide teammate", () => {
   assert.equal(scene.opponents.length, 2);
   assert.equal(scene.teammates.length, 3);
   assert.ok(scene.learner.y > pitch.ownBuildOutY);
+  assert.ok(dist(scene.ball, scene.learner) <= 5);
   assert.ok(wide.x < 120);
   assert.ok(wide.y > pitch.ownBuildOutY);
   assert.ok(striker.y < pitch.ownBuildOutY);

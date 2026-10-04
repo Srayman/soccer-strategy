@@ -342,8 +342,8 @@
               team: "opponent",
               role: "presser",
               facing: "bottom",
-              x: 32,
-              y: 68,
+              x: 30,
+              y: 87,
             }),
             player({
               id: "line-opponent",
