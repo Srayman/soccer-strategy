@@ -250,3 +250,70 @@ test("the level choice starts at level 1 and is not the advanced list", () => {
     true
   );
 });
+
+test("level 2 hides zones and keeps pick marks on screen", () => {
+  const attempt = harness.attempt;
+  const game = fs.readFileSync(path.join(root, "js", "game.js"), "utf8");
+  const render = game.slice(game.indexOf("function renderAttempt"), game.indexOf("function sync"));
+  assert.match(render, /visibleTargets/);
+
+  const openLevel1 = attempt.presentation(attempt.createLevelAttempt(openBody, 1));
+  assert.equal(openLevel1.visibleTargets, undefined);
+  assert.equal(openLevel1.targets.length, 1);
+  assert.equal(openLevel1.targets[0].r, 44);
+
+  const openLevel2 = attempt.createLevelAttempt(openBody, 2);
+  const openView = attempt.presentation(openLevel2);
+  assert.equal(openView.targets[0].r, 88);
+  assert.equal(openView.targets[0].zone, true);
+  assert.equal(openView.visibleTargets.some((mark) => mark.zone), false);
+  assert.equal(
+    openView.visibleTargets.some((mark) => mark.x === 420 && mark.y === 676),
+    false
+  );
+  assert.ok(openView.visibleTargets.length >= 1);
+  const openChoice = openView.visibleTargets[0];
+  assert.notEqual(openChoice.id, "b");
+  const openMiss = attempt.drop(attempt.createLevelAttempt(openBody, 2), {
+    x: openChoice.x,
+    y: openChoice.y,
+  });
+  assert.equal(openMiss.state, "miss");
+  assert.equal(openMiss.token.x, openChoice.x);
+  assert.equal(openMiss.token.y, openChoice.y);
+
+  const away = attempt.presentation(attempt.createLevelAttempt(checkAway, 2));
+  assert.deepEqual(
+    away.visibleTargets.map((mark) => mark.id),
+    away.targets.map((mark) => mark.id)
+  );
+  assert.ok(away.visibleTargets.some((mark) => mark.id === "b"));
+  assert.ok(away.visibleTargets.some((mark) => mark.id !== "b"));
+
+  for (const drill of drills) {
+    const level2 = attempt.createLevelAttempt(drill, 2);
+    const view = attempt.presentation(level2);
+    if (drill.kind === "drag") {
+      assert.equal(view.visibleTargets.some((mark) => mark.zone), false, drill.id);
+      assert.ok(view.visibleTargets.length >= 1, drill.id);
+      assert.ok(view.visibleTargets.every((mark) => mark.id !== "b"), drill.id);
+      const choice = view.visibleTargets[0];
+      const missed = attempt.drop(attempt.createLevelAttempt(drill, 2), {
+        x: choice.x,
+        y: choice.y,
+      });
+      assert.equal(missed.state, "miss", drill.id);
+      assert.equal(missed.token.x, choice.x, drill.id);
+      assert.equal(missed.token.y, choice.y, drill.id);
+    } else {
+      assert.equal(view.visibleTargets.length, view.targets.length, drill.id);
+      assert.ok(view.visibleTargets.some((mark) => mark.id === "b"), drill.id);
+    }
+  }
+
+  const zones = drills.find((drill) => drill.id === "zones");
+  const zonesView = attempt.presentation(attempt.createLevelAttempt(zones, 2));
+  assert.equal(zonesView.targets.some((mark) => mark.zone), true);
+  assert.equal(zonesView.visibleTargets.some((mark) => mark.zone), false);
+  assert.ok(zonesView.visibleTargets.length >= 1);
+});

@@ -430,12 +430,15 @@
       const source = frame.targets || frame.goodSpots || [];
       return source.map(function (spot) {
         const drawn = drawnRadius(spot, fromDrag);
-        return Object.freeze({
+        const mark = {
           id: spot.id || inner.correctTarget.id,
           x: spot.x,
           y: spot.y,
           r: level === 2 ? drawn * 2 : drawn,
-        });
+        };
+        // A drag spot is a zone. Level 2 hides it. A pick mark is not a zone.
+        if (fromDrag) mark.zone = true;
+        return Object.freeze(mark);
       });
     }
 
@@ -472,10 +475,67 @@
       });
     }
 
+    function choiceProbes(correct) {
+      const step = correct.r + 1;
+      const probes = [
+        { x: correct.x + step, y: correct.y },
+        { x: correct.x - step, y: correct.y },
+        { x: correct.x, y: correct.y + step },
+        { x: correct.x, y: correct.y - step },
+        { x: 1, y: 1 },
+      ];
+      // The open-body miss sits just outside the zone. A wrong choice must not cover it.
+      if (correct.x === 420 && correct.y === 676) probes.push({ x: 520, y: 676 });
+      return probes;
+    }
+
+    function choiceCandidates(frame) {
+      const points = [];
+      function add(point) {
+        if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return;
+        points.push({ x: point.x, y: point.y });
+      }
+      add(frame.learner);
+      (frame.opponents || []).forEach(add);
+      (frame.teammates || []).forEach(add);
+      add(frame.ball);
+      for (let y = 40; y <= pitch.length - 40; y += 50) {
+        for (let x = 40; x <= pitch.width - 40; x += 50) {
+          points.push({ x: x, y: y });
+        }
+      }
+      return points;
+    }
+
+    // Level 2 of a drag is still a drag. The strategies that were given a
+    // pick need wrong spots as well, so a player can choose one.
+    function wrongChoicesFor(frame, correct) {
+      const probes = choiceProbes(correct);
+      const chosen = [];
+      const ids = ["a", "c"];
+      choiceCandidates(frame).forEach(function (spot) {
+        if (chosen.length >= 2) return;
+        const mark = { x: spot.x, y: spot.y, r: correct.r };
+        if (insideMark(correct, spot)) return;
+        if (probes.some(function (point) { return insideMark(mark, point); })) return;
+        if (chosen.some(function (other) {
+          return Math.hypot(other.x - spot.x, other.y - spot.y) < 30;
+        })) return;
+        chosen.push(Object.freeze({
+          id: ids[chosen.length],
+          x: spot.x,
+          y: spot.y,
+          r: correct.r,
+        }));
+      });
+      return chosen;
+    }
+
     function withLevel(result, attempt, fields) {
       const next = Object.assign({}, result, fields || {});
       if (attempt.level) next.level = attempt.level;
       if (attempt.levelMarks) next.levelMarks = attempt.levelMarks;
+      if (attempt.wrongChoices) next.wrongChoices = attempt.wrongChoices;
       if (attempt.pictureId) next.pictureId = attempt.pictureId;
       if (attempt.token && !next.token) next.token = attempt.token;
       return Object.freeze(next);
@@ -493,14 +553,21 @@
           return Object.freeze(Object.assign({}, view, { spotLine: spotLine }));
         }
         const playing = attempt.state === "playing" && attempt.ended === false;
-        return Object.freeze(
-          Object.assign({}, view, {
-            targets: attempt.levelMarks,
-            pickable: attempt.level === 1 && playing,
-            draggable: attempt.level === 2 && playing,
-            spotLine: spotLine,
-          })
-        );
+        const shown = {
+          targets: attempt.levelMarks,
+          pickable: attempt.level === 1 && playing,
+          draggable: attempt.level === 2 && playing,
+          spotLine: spotLine,
+        };
+        // Level 2 hides zones. Pick marks stay. Wrong choices stay.
+        if (attempt.level === 2) {
+          shown.visibleTargets = Object.freeze(
+            attempt.levelMarks.filter(function (mark) {
+              return !mark.zone;
+            }).concat(attempt.wrongChoices || [])
+          );
+        }
+        return Object.freeze(Object.assign({}, view, shown));
       },
       revealAnswer: inner.revealAnswer,
       endAttempt: inner.endAttempt,
@@ -604,6 +671,11 @@
           correctionSpots: Object.freeze([]),
           level: 2,
           levelMarks: frozenMarks,
+          wrongChoices: Object.freeze(
+            frozenMarks.some(function (mark) { return mark.zone; }) && correct[0]
+              ? wrongChoicesFor(frame, correct[0])
+              : []
+          ),
         };
         if (pictureId) made.pictureId = pictureId;
         return Object.freeze(made);
@@ -618,7 +690,10 @@
         const fields = {};
         if (pictureId) fields.pictureId = pictureId;
         if (attempt && attempt.levelMarks) {
-          const hits = containingMarks(attempt.levelMarks, point);
+          const hits = containingMarks(
+            attempt.levelMarks.concat(attempt.wrongChoices || []),
+            point
+          );
           const correctHits =
             result.state === "correct"
               ? hits.filter(function (mark) {

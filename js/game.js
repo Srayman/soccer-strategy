@@ -534,8 +534,10 @@
     layer.replaceChildren();
 
     const view = attemptApi.presentation(attempt);
-    if (view.targets) {
-      view.targets.forEach((target) => {
+    // Level 2 sends visibleTargets so a zone is not drawn. Pick marks still are.
+    const painted = view.visibleTargets || view.targets;
+    if (painted) {
+      painted.forEach((target) => {
         layer.append(paintTarget(target, view.pickable));
       });
     }
