@@ -665,6 +665,11 @@
       el = document.createElement(id === "starter-angles" ? "div" : "p");
       el.id = id;
       el.className = className;
+      if (id === "starter-angles") {
+        const copy = document.querySelector(".pitch-copy");
+        copy.insertBefore(el, copy.firstChild);
+        return el;
+      }
       const legend = document.getElementById("starter-legend");
       const caption = document.getElementById("starter-caption");
       const anchor = id === "starter-caption" ? statusEl : id === "starter-legend" ? caption : legend;
@@ -764,12 +769,15 @@
       token.append(label);
     }
 
+    let angledSceneId = "";
+
     function renderAngles(scene) {
       const bar = slot("starter-angles", "starter-angles");
       if (!scene || !scene.angles) {
         bar.hidden = true;
         bar.dataset.angles = "";
         bar.replaceChildren();
+        angledSceneId = "";
         return;
       }
       bar.hidden = false;
@@ -800,6 +808,11 @@
         button.setAttribute("aria-pressed", on ? "true" : "false");
         button.disabled = !playing;
       });
+      if (scene.id !== angledSceneId) {
+        angledSceneId = scene.id;
+        const copy = bar.closest(".pitch-copy");
+        if (copy) copy.scrollTop = 0;
+      }
     }
 
     function selectAngle(id) {
