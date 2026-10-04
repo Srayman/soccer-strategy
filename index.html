@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Soccer strategy</title>
+    <link rel="stylesheet" href="css/game.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <h1>Soccer strategy</h1>
+      <p>Look down on the pitch and start a starter drill.</p>
+    </header>
+    <main class="layout">
+      <section class="pitch-panel" aria-labelledby="pitch-heading">
+        <h2 id="pitch-heading">Pitch</h2>
+        <p id="play-status" class="play-status" aria-live="polite"></p>
+        <div class="pitch-frame">
+          <svg
+            id="pitch"
+            viewBox="-36 -24 1122 728"
+            role="img"
+            aria-label="Top-down soccer pitch"
+          >
+            <rect x="-36" y="-24" width="1122" height="728" fill="#12301f" />
+            <defs>
+              <pattern
+                id="mowing-stripes"
+                width="1050"
+                height="68"
+                patternUnits="userSpaceOnUse"
+              >
+                <rect width="1050" height="34" fill="#2f8f46" />
+                <rect y="34" width="1050" height="34" fill="#277a3c" />
+              </pattern>
+            </defs>
+            <g id="goals" fill="#d7efe0" stroke="#f5f7f2" stroke-width="3">
+              <rect x="-22" y="303.4" width="22" height="73.2" />
+              <rect x="1050" y="303.4" width="22" height="73.2" />
+            </g>
+            <rect
+              x="0"
+              y="0"
+              width="1050"
+              height="680"
+              fill="url(#mowing-stripes)"
+            />
+            <g
+              fill="none"
+              stroke="#f5f7f2"
+              stroke-width="4"
+              stroke-linejoin="round"
+              stroke-linecap="round"
+            >
+              <rect x="0" y="0" width="1050" height="680" />
+              <line x1="525" y1="0" x2="525" y2="680" />
+              <circle cx="525" cy="340" r="91.5" />
+              <rect x="0" y="138.4" width="165" height="403.2" />
+              <rect x="885" y="138.4" width="165" height="403.2" />
+              <rect x="0" y="248.4" width="55" height="183.2" />
+              <rect x="995" y="248.4" width="55" height="183.2" />
+              <path d="M165 266.88 A91.5 91.5 0 0 1 165 413.12" />
+              <path d="M885 266.88 A91.5 91.5 0 0 0 885 413.12" />
+              <path d="M10 0 A10 10 0 0 0 0 10" />
+              <path d="M1040 0 A10 10 0 0 1 1050 10" />
+              <path d="M0 670 A10 10 0 0 0 10 680" />
+              <path d="M1050 670 A10 10 0 0 1 1040 680" />
+            </g>
+            <g fill="#f5f7f2">
+              <circle cx="525" cy="340" r="4" />
+              <circle cx="110" cy="340" r="4" />
+              <circle cx="940" cy="340" r="4" />
+            </g>
+          </svg>
+        </div>
+      </section>
+      <div id="drill-list" class="drill-list"></div>
+    </main>
+    <script src="js/catalog.js"></script>
+    <script src="js/game.js"></script>
+  </body>
+</html>
