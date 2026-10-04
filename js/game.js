@@ -92,6 +92,22 @@
     idea.className = "drill-idea";
     idea.textContent = drill.idea;
 
+    const more = document.createElement("button");
+    more.type = "button";
+    more.className = "drill-more";
+    more.dataset.action = "more";
+    more.textContent = "More";
+    more.setAttribute("aria-expanded", "false");
+    more.setAttribute("aria-controls", "explainer-" + drill.id);
+    more.setAttribute("aria-label", "More about " + drill.name);
+    idea.append(more);
+
+    const explainer = document.createElement("p");
+    explainer.className = "drill-explainer";
+    explainer.id = "explainer-" + drill.id;
+    explainer.hidden = true;
+    explainer.textContent = drill.explainer;
+
     const kind = document.createElement("span");
     kind.className = "drill-kind";
     kind.textContent = kindLabel(drill.kind);
@@ -99,7 +115,7 @@
     const button = document.createElement("button");
     button.type = "button";
     button.className = "drill-action";
-    item.append(name, idea, kind, button);
+    item.append(name, idea, kind, explainer, button);
     paintButton(item, drill, button);
     return item;
   }
@@ -214,7 +230,7 @@
     paintTierCopy();
     listEl.querySelectorAll(".drill").forEach((item) => {
       const drill = drills.find((entry) => entry.id === item.dataset.drillId);
-      paintButton(item, drill, item.querySelector("button"));
+      paintButton(item, drill, item.querySelector(".drill-action"));
     });
   }
 
@@ -542,6 +558,21 @@
   }
 
   listEl.addEventListener("click", (event) => {
+    const more = event.target.closest("button[data-action='more']");
+    if (more) {
+      const item = more.closest("[data-drill-id]");
+      const explainer = item.querySelector(".drill-explainer");
+      const open = explainer.hidden;
+      explainer.hidden = !open;
+      more.setAttribute("aria-expanded", open ? "true" : "false");
+      more.textContent = open ? "Less" : "More";
+      const drillName = item.querySelector(".drill-name").textContent;
+      more.setAttribute(
+        "aria-label",
+        (open ? "Less about " : "More about ") + drillName
+      );
+      return;
+    }
     const button = event.target.closest("button[data-action='start']");
     if (!button) return;
     const item = button.closest("[data-drill-id]");
@@ -585,6 +616,39 @@
       drag = null;
       attempt = freshAttempt(drill);
       sync();
+    });
+  }
+
+  const helpButton = document.querySelector("#game-help");
+  const helpPanel = document.querySelector("#game-help-panel");
+
+  function helpIsOpen() {
+    return Boolean(helpPanel && helpPanel.open);
+  }
+
+  function openHelp() {
+    if (!helpButton || !helpPanel || helpIsOpen()) return;
+    helpButton.setAttribute("aria-expanded", "true");
+    helpPanel.showModal();
+  }
+
+  function closeHelp() {
+    if (!helpPanel || !helpIsOpen()) return;
+    helpPanel.close();
+  }
+
+  if (helpButton && helpPanel) {
+    helpButton.addEventListener("click", () => {
+      if (helpIsOpen()) closeHelp();
+      else openHelp();
+    });
+    helpPanel.addEventListener("close", () => {
+      helpButton.setAttribute("aria-expanded", "false");
+    });
+    helpPanel.addEventListener("click", (event) => {
+      if (event.target === helpPanel || event.target.closest("[data-action='close-help']")) {
+        closeHelp();
+      }
     });
   }
 

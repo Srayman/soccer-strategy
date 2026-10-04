@@ -687,9 +687,8 @@
       el = document.createElement(id === "starter-angles" ? "div" : "p");
       el.id = id;
       el.className = className;
-      const legend = document.getElementById("starter-legend");
       const caption = document.getElementById("starter-caption");
-      const anchor = id === "starter-caption" ? statusEl : id === "starter-legend" ? caption : legend;
+      const anchor = id === "starter-caption" ? statusEl : caption || statusEl;
       anchor.insertAdjacentElement("afterend", el);
       return el;
     }
@@ -834,28 +833,19 @@
 
     function draw() {
       const caption = slot("starter-caption", "starter-caption");
-      const legend = slot("starter-legend", "starter-legend");
       const scene = currentScene();
       const layer = sceneLayer();
       layer.replaceChildren();
       renderAngles(scene);
       if (!scene) {
         caption.hidden = true;
-        legend.hidden = true;
         caption.textContent = "";
-        legend.textContent = "";
         return;
       }
       const frame = frameFor(scene);
       const captionText = frame.caption || scene.caption || "";
       caption.hidden = captionText === "";
-      legend.hidden = false;
       caption.textContent = captionText;
-      const levelButton = document.querySelector("#play-level button[aria-pressed='true']");
-      const levelTwo = Boolean(levelButton && levelButton.dataset.level === "2");
-      legend.textContent = levelTwo
-        ? "White is you. Blue is your team. Red is the other team."
-        : "White is you. Blue is your team. Red is the other team. Tap a ring.";
       (frame.guides || scene.guides || []).forEach(function (guide) {
         layer.append(
           svgEl("line", {
