@@ -10,7 +10,7 @@ function words(sentence) {
   return sentence.split(/\s+/).filter(Boolean);
 }
 
-test("one help control holds the color key and the pick-a-starter line", () => {
+test("one help control explains the game in short plain sentences", () => {
   const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
   const game = fs.readFileSync(path.join(root, "js", "game.js"), "utf8");
   const scenes = fs.readFileSync(path.join(root, "js", "starter-scenes.js"), "utf8");
@@ -26,13 +26,52 @@ test("one help control holds the color key and the pick-a-starter line", () => {
   const dialogEnd = html.indexOf("</dialog>");
   assert.ok(dialogStart > 0 && dialogEnd > dialogStart);
   const dialog = html.slice(dialogStart, dialogEnd);
-  assert.match(dialog, /Look down on the pitch and start a starter drill\./);
-  assert.match(dialog, /White is you\. Blue is your team\. Red is the other team\./);
-  assert.match(dialog, /tap a ring/);
-  assert.match(dialog, /Level 2: drag the white player\./);
+  const sentences = dialog
+    .replace(/<[^>]+>/g, " ")
+    .split(/(?<=[.!?])\s+/)
+    .map((sentence) => sentence.replace(/\s+/g, " ").trim())
+    .filter((sentence) => sentence && sentence !== "How to play");
+
+  const needed = [
+    "Look down on the pitch.",
+    "White is you. Blue is your team. Red is the other team.",
+    "Attack is the top goal. Defend is the bottom goal.",
+    "A pick means you tap one circle.",
+    "A drag means you pull the white player to a spot and let go.",
+    "Level 1 is a pick.",
+    "Level 2 is a drag of the same drill.",
+    "Level 2 is not the Advanced list.",
+    "Level 2 hides the good-spot circles and the wrong-choice circles.",
+    "A drop on the hidden good spot still counts.",
+    "A drop on a hidden wrong spot is a miss.",
+    "A miss shows the good spot and ends the attempt.",
+    "There is no second try.",
+    "A miss adds 1 point.",
+    "A correct first try adds 3 points.",
+    "A later ending adds 1 point.",
+    "The score is a count, not a grade.",
+    "Next stays locked until every starter has ended once.",
+    "Advanced stays locked until every next drill has ended once.",
+    "Goalkeeper step-out counts as one starter.",
+    "It counts only after Central, Near post, and Free ball have each ended once.",
+    "When you open the page, the first starter is Open body.",
+    "That start does not add points.",
+  ];
+  for (const sentence of needed) {
+    assert.equal(dialog.includes(sentence), true, sentence);
+  }
+  assert.equal(drills.find((drill) => drill.tier === "starter").name, "Open body");
+  assert.doesNotMatch(dialog, /tap a ring/);
+  assert.doesNotMatch(dialog, /start a starter drill/);
+  assert.doesNotMatch(dialog, /\b(pass|fail|unlock)\b/i);
   assert.match(dialog, /data-action="close-help"/);
-  assert.equal(html.split("Look down on the pitch and start a starter drill.").length - 1, 1);
-  assert.match(game, /showModal\(/);
+  for (const sentence of sentences) {
+    const count = sentence.split(/\s+/).filter(Boolean).length;
+    assert.ok(count <= 16, sentence + " (" + count + " words)");
+  }
+  assert.match(game, /if \(helpIsOpen\(\)\) closeHelp\(\)/);
+  assert.match(game, /else openHelp\(\)/);
+  assert.match(game, /helpPanel\.showModal\(\)/);
   assert.match(game, /helpPanel\.close\(/);
 });
 

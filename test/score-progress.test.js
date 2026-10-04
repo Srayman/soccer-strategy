@@ -96,7 +96,8 @@ test("the page shows a score, opens the first starter, and keeps the spot", () =
   assert.match(html, /Find the good spot on the first try: 3\./);
   assert.match(html, /A miss: 1\./);
   assert.match(html, /Any try after that: 1\./);
-  assert.doesNotMatch(html, /\b(pass|fail|grade)\b/i);
+  const outsideHelp = html.replace(/<dialog id="game-help-panel"[\s\S]*?<\/dialog>/, "");
+  assert.doesNotMatch(outsideHelp, /\b(pass|fail|grade)\b/i);
   assert.ok(html.indexOf('src="js/spot-lines.js"') < html.indexOf('src="js/starter-scenes.js"'));
   assert.ok(html.indexOf('src="js/progress-copy.js"') < html.indexOf('src="js/game.js"'));
 
