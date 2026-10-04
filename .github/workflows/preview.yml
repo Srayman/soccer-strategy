@@ -1,0 +1,181 @@
+# Publish each pull request at its own Pages URL.
+#
+# The github-pages environment only accepts deployments from main, and
+# .github/workflows/static.yml already uploads the repository root from main.
+# This workflow copies the pull request tree to pr-preview/pr-<number>/ on main,
+# then dispatches that same live workflow. The live root stays the repository
+# root. A push from GITHUB_TOKEN does not start workflows, so the dispatch is
+# required. Do not put this workflow in the "pages" concurrency group: it waits
+# for static.yml, and static.yml uses that group.
+name: Preview pull request
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  contents: write
+  actions: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: preview-publish
+  cancel-in-progress: false
+
+jobs:
+  preview:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: preview-pr-${{ github.event.pull_request.number }}
+      url: https://srayman.github.io/soccer-strategy/pr-preview/pr-${{ github.event.pull_request.number }}/
+    steps:
+      - name: Checkout pull request
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
+          persist-credentials: true
+
+      - name: Publish preview snapshot and deploy
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_ACTION: ${{ github.event.action }}
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          DEST="pr-preview/pr-${PR_NUMBER}"
+          SITE="https://srayman.github.io/soccer-strategy/${DEST}/"
+          ROOT_README="https://srayman.github.io/soccer-strategy/README.md"
+
+          if [ "$PR_ACTION" != "closed" ]; then
+            rm -rf /tmp/preview-src
+            mkdir -p /tmp/preview-src
+            tar -C "$GITHUB_WORKSPACE" \
+              --exclude .git \
+              --exclude .github \
+              --exclude pr-preview \
+              -cf - . | tar -C /tmp/preview-src -xf -
+          fi
+
+          git fetch origin main:refs/remotes/origin/main
+          git checkout -B preview-publish origin/main
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if [ "$PR_ACTION" = "closed" ]; then
+            if [ -e "$DEST" ]; then
+              git rm -r --ignore-unmatch "$DEST"
+            fi
+          else
+            rm -rf "$DEST"
+            mkdir -p "$DEST"
+            tar -C /tmp/preview-src -cf - . | tar -C "$DEST" -xf -
+            git add -A -- "$DEST"
+          fi
+
+          unexpected="$(git diff --cached --name-only | grep -v "^${DEST}/" || true)"
+          if [ -n "$unexpected" ]; then
+            echo "Refusing to publish paths outside ${DEST}:"
+            echo "$unexpected"
+            exit 1
+          fi
+
+          if git diff --cached --quiet; then
+            echo "No snapshot changes"
+          else
+            git commit -m "Publish preview for pull request #${PR_NUMBER}"
+            pushed=0
+            for _attempt in 1 2 3 4 5; do
+              if git push origin HEAD:main; then
+                pushed=1
+                break
+              fi
+              git fetch origin main
+              git rebase origin/main
+            done
+            if [ "$pushed" != 1 ]; then
+              echo "Failed to push the preview snapshot to main"
+              exit 1
+            fi
+          fi
+
+          sha="$(git rev-parse HEAD)"
+          if [ "$PR_ACTION" != "closed" ]; then
+            if [ -f "${DEST}/index.html" ]; then
+              probe="${SITE}index.html"
+            elif [ -f "${DEST}/README.md" ]; then
+              probe="${SITE}README.md"
+            else
+              probe="$SITE"
+            fi
+          else
+            probe="${SITE}README.md"
+          fi
+
+          before_id="$(gh run list --repo "$REPO" --workflow static.yml --event workflow_dispatch --limit 1 --json databaseId --jq '.[0].databaseId // 0')"
+          gh workflow run static.yml --repo "$REPO" --ref main
+
+          run_id=""
+          for _wait in $(seq 1 40); do
+            run_id="$(gh run list --repo "$REPO" --workflow static.yml --event workflow_dispatch --limit 10 --json databaseId,headSha --jq "map(select(.headSha == \"${sha}\" and .databaseId > ${before_id})) | .[0].databaseId // empty")"
+            if [ -n "$run_id" ]; then
+              break
+            fi
+            sleep 3
+          done
+          if [ -z "$run_id" ]; then
+            echo "The live Pages workflow did not start for ${sha}"
+            exit 1
+          fi
+
+          gh run watch "$run_id" --repo "$REPO" --exit-status
+
+          ok=0
+          for _probe in $(seq 1 36); do
+            code="$(curl -sS -o /dev/null -w '%{http_code}' -H 'Cache-Control: no-cache' -L "$probe" || true)"
+            root_code="$(curl -sS -o /dev/null -w '%{http_code}' -H 'Cache-Control: no-cache' -L "$ROOT_README" || true)"
+            echo "probe ${probe} -> ${code}; live root README -> ${root_code}"
+            if [ "$root_code" != "200" ]; then
+              sleep 5
+              continue
+            fi
+            if [ "$PR_ACTION" = "closed" ]; then
+              if [ "$code" = "404" ]; then
+                ok=1
+                break
+              fi
+            elif [ "$code" = "200" ]; then
+              ok=1
+              break
+            fi
+            sleep 5
+          done
+          if [ "$ok" != 1 ]; then
+            echo "Preview did not reach the expected state: ${SITE}"
+            exit 1
+          fi
+
+          {
+            echo "### Pull request preview"
+            echo
+            echo "$SITE"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          marker="<!-- soccer-strategy-preview -->"
+          if [ "$PR_ACTION" = "closed" ]; then
+            printf '%s\nPreview removed.\n' "$marker" > /tmp/preview-comment.txt
+          else
+            printf '%s\nPreview: %s\n' "$marker" "$SITE" > /tmp/preview-comment.txt
+          fi
+
+          existing="$(gh api "repos/${REPO}/issues/${PR_NUMBER}/comments?per_page=100" --jq "[.[] | select((.body // \"\") | contains(\"${marker}\"))][0].id // empty")"
+          if [ -n "$existing" ]; then
+            gh api -X PATCH "repos/${REPO}/issues/comments/${existing}" -f body="$(cat /tmp/preview-comment.txt)"
+          else
+            gh api "repos/${REPO}/issues/${PR_NUMBER}/comments" -f body="$(cat /tmp/preview-comment.txt)"
+          fi
