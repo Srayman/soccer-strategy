@@ -150,7 +150,19 @@
     return allScenes()[id] || null;
   }
 
+  function knowsPicture(id) {
+    if (!id) return false;
+    const all = allScenes();
+    const keys = Object.keys(all);
+    for (let i = 0; i < keys.length; i += 1) {
+      const scene = all[keys[i]];
+      if (scene.pictures && scene.pictures[id]) return true;
+    }
+    return false;
+  }
+
   return Object.freeze({
     sceneFor: sceneFor,
+    knowsPicture: knowsPicture,
   });
 });

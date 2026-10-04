@@ -389,13 +389,18 @@
     });
   }
 
+  function pictureKnown(id) {
+    if (!id) return false;
+    for (let i = 0; i < scenes.length; i += 1) {
+      const scene = scenes[i];
+      if (scene.pictures && scene.pictures[id]) return true;
+    }
+    const play = globalThis.SoccerScenePlay;
+    return Boolean(play && typeof play.knowsPicture === "function" && play.knowsPicture(id));
+  }
+
   function usePicture(id) {
-    const scene = byId["goalkeeper-step-out-and-line-up"];
-    if (!scene || !scene.angles) return angleId;
-    const known = scene.angles.some(function (angle) {
-      return angle.id === id;
-    });
-    if (!known) return angleId;
+    if (!pictureKnown(id)) return angleId;
     angleId = id;
     return angleId;
   }
@@ -531,6 +536,72 @@
       return chosen;
     }
 
+    // Level 1 is a pick at the on-screen mark. The good spot stays.
+    // Two or three other spots are wrong. A pick there is a miss.
+    function levelOneMarks(frame, marks) {
+      const correctId = inner.correctTarget.id;
+      const wrong = marks.filter(function (mark) {
+        return mark.id !== correctId;
+      });
+      if (wrong.length >= 2) return marks;
+      const correct = marks.find(function (mark) {
+        return mark.id === correctId;
+      });
+      if (!correct) return marks;
+      const added = extraWrongMarks(frame, correct, marks, 2 - wrong.length);
+      return marks.concat(added);
+    }
+
+    function extraWrongMarks(frame, correct, existing, need) {
+      const used = Object.create(null);
+      existing.forEach(function (mark) {
+        used[mark.id] = true;
+      });
+      const ids = ["a", "c", "d", "e", "f", "g"].filter(function (id) {
+        return !used[id];
+      });
+      const chosen = [];
+      const radius = correct.r;
+
+      function clear(spot) {
+        if (spot.x < 16 || spot.y < 16) return false;
+        if (spot.x > pitch.width - 16 || spot.y > pitch.length - 16) return false;
+        return existing.concat(chosen).every(function (other) {
+          return Math.hypot(other.x - spot.x, other.y - spot.y) >= other.r + radius;
+        });
+      }
+
+      const candidates = [];
+      for (let ring = 1; ring <= 10; ring += 1) {
+        const dist = radius * 2 + 8 * ring;
+        for (let step = 0; step < 16; step += 1) {
+          const angle = (Math.PI * 2 * step) / 16 + ring * 0.35;
+          candidates.push({
+            x: correct.x + Math.cos(angle) * dist,
+            y: correct.y + Math.sin(angle) * dist,
+          });
+        }
+      }
+      choiceCandidates(frame).forEach(function (spot) {
+        candidates.push(spot);
+      });
+
+      candidates.forEach(function (spot) {
+        if (chosen.length >= need || chosen.length >= ids.length) return;
+        const point = { x: Math.round(spot.x), y: Math.round(spot.y) };
+        if (!clear(point)) return;
+        chosen.push(
+          Object.freeze({
+            id: ids[chosen.length],
+            x: point.x,
+            y: point.y,
+            r: radius,
+          })
+        );
+      });
+      return chosen;
+    }
+
     function withLevel(result, attempt, fields) {
       const next = Object.assign({}, result, fields || {});
       if (attempt.level) next.level = attempt.level;
@@ -626,7 +697,9 @@
         const chosen = level === 2 ? 2 : 1;
         const scene = sceneOf(drill && drill.id);
         const frame = frameFor(scene);
-        const marks = frame ? marksFor(frame, chosen) : [];
+        const baseMarks = frame ? marksFor(frame, chosen) : [];
+        // Level 2 keeps its own marks. Only Level 1 gains the extra wrong spots.
+        const marks = chosen === 1 && frame ? levelOneMarks(frame, baseMarks) : baseMarks;
         if (!drill || !frame || marks.length === 0) {
           if (drill && drill.kind === "drag") return inner.createAttempt(drill);
           if (drill && drill.kind === "pick") return inner.createPickAttempt(drill);
