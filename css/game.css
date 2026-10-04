@@ -356,10 +356,9 @@ body {
   pointer-events: none;
 }
 
-/* Keep the page fixed unless the window is both wide and tall.
-   390x626 and 700x400 are inside this range. A wide, tall window
-   keeps the full-width field from the earlier layout. */
-@media (max-width: 960px), (max-height: 720px) {
+/* Fixed page unless the window is both wider than 800px and taller than 500px.
+   390x626 and 700x400 stay inside. 900x600 and 1200x600 keep the full-width field. */
+@media (max-width: 800px), (max-height: 500px) {
   html {
     height: 100%;
     height: 100svh;
@@ -545,10 +544,10 @@ body {
   }
 }
 
-/* Wide enough for two columns, including 700x400.
-   A wide, tall window stays on the earlier full-width field. */
-@media (min-width: 640px) and (max-width: 960px),
-  (min-width: 640px) and (max-height: 720px) {
+/* Two columns when the window is wide enough but not both wider than 800px and taller than 500px.
+   700x400 sits the list beside the field. 900x600 and 1200x600 do not. */
+@media (min-width: 640px) and (max-width: 800px),
+  (min-width: 640px) and (max-height: 500px) {
   .site-header {
     display: flex;
     flex-wrap: nowrap;
