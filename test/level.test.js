@@ -496,3 +496,86 @@ test("level 1 offers two or three wrong spots and a wrong pick is a miss", () =>
   correctSession = points.settle(correctSession, first);
   assert.equal(correctSession.points, 3);
 });
+
+test("level 2 keeps its own first try and level 1 still scores 3 in either order", () => {
+  const attempt = harness.attempt;
+  const points = require("../js/points.js");
+  const { celebrationFor } = require("../js/celebrate.js");
+  const open = drills.find((drill) => drill.id === "open-body");
+  const keeper = drills.find((drill) => drill.id === "goalkeeper-step-out-and-line-up");
+
+  function correctLevel(drill, level) {
+    const playing = attempt.createLevelAttempt(drill, level);
+    if (level === 2) {
+      const spot = playing.goodSpots[0];
+      return attempt.drop(playing, { x: spot.x, y: spot.y });
+    }
+    return attempt.pick(playing, "b");
+  }
+
+  const level1 = correctLevel(open, 1);
+  const level1Mark = celebrationFor(level1);
+  assert.equal(level1.state, "correct");
+  assert.ok(level1Mark);
+  assert.equal(level1Mark.stars.length, 8);
+
+  let level1Then2 = points.createSession();
+  level1Then2 = points.settle(level1Then2, level1);
+  assert.equal(level1Then2.points, 3);
+  const level2After = correctLevel(open, 2);
+  assert.equal(level2After.state, "correct");
+  assert.equal(level2After.ended, true);
+  assert.equal(celebrationFor(level2After), level1Mark);
+  assert.equal(attempt.presentation(level2After).visibleTargets.length, 0);
+  assert.deepEqual(level2After.correctionSpots, []);
+  level1Then2 = points.settle(level1Then2, level2After);
+  assert.equal(level1Then2.points, 6);
+  level1Then2 = points.settle(level1Then2, correctLevel(open, 2));
+  assert.equal(level1Then2.points, 7);
+
+  let level2Then1 = points.createSession();
+  const level2First = correctLevel(open, 2);
+  level2Then1 = points.settle(level2Then1, level2First);
+  assert.equal(level2Then1.points, 3);
+  assert.equal(celebrationFor(level2First), level1Mark);
+  level2Then1 = points.settle(level2Then1, correctLevel(open, 1));
+  assert.equal(level2Then1.points, 6);
+
+  const missed = attempt.drop(attempt.createLevelAttempt(open, 2), { x: 1, y: 1 });
+  assert.equal(missed.state, "miss");
+  assert.equal(missed.ended, true);
+  assert.equal(celebrationFor(missed), null);
+  assert.ok(attempt.presentation(missed).correctionSpots.length > 0);
+  let afterMiss = points.settle(points.createSession(), missed);
+  assert.equal(afterMiss.points, 1);
+  const laterAfterMiss = correctLevel(open, 2);
+  assert.equal(laterAfterMiss.state, "correct");
+  afterMiss = points.settle(afterMiss, laterAfterMiss);
+  assert.equal(afterMiss.points, 2);
+  assert.equal(celebrationFor(laterAfterMiss), level1Mark);
+
+  let missThenOther = points.settle(
+    points.createSession(),
+    attempt.pick(attempt.createLevelAttempt(open, 1), "a")
+  );
+  assert.equal(missThenOther.points, 1);
+  missThenOther = points.settle(missThenOther, correctLevel(open, 2));
+  assert.equal(missThenOther.points, 4);
+
+  let level2MissThen1 = points.settle(points.createSession(), missed);
+  level2MissThen1 = points.settle(level2MissThen1, correctLevel(open, 1));
+  assert.equal(level2MissThen1.points, 4);
+
+  scenes.usePicture("central");
+  let keeperBook = points.createSession();
+  keeperBook = points.settle(keeperBook, correctLevel(keeper, 1));
+  assert.equal(keeperBook.points, 3);
+  scenes.usePicture("near-post");
+  keeperBook = points.settle(keeperBook, correctLevel(keeper, 1));
+  assert.equal(keeperBook.points, 4);
+  scenes.usePicture("central");
+  keeperBook = points.settle(keeperBook, correctLevel(keeper, 2));
+  assert.equal(keeperBook.points, 7);
+  assert.equal(celebrationFor(correctLevel(keeper, 2)), level1Mark);
+  scenes.usePicture("central");
+});

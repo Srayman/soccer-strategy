@@ -18,12 +18,20 @@
     });
   }
 
+  // Level 1 and an unleveled try share the drill id.
+  // Level 2 has its own first try, so it does not spend the Level 1 bonus.
+  function firstTryKey(attempt) {
+    if (attempt.level === 2) return attempt.drillId + "#2";
+    return attempt.drillId;
+  }
+
   function settle(session, attempt) {
     if (!attempt || attempt.ended !== true) return session;
     if (attempt.state !== "miss" && attempt.state !== "correct") return session;
 
     const scored = Array.isArray(session.scoredDrills) ? session.scoredDrills : [];
-    const first = scored.indexOf(attempt.drillId) === -1;
+    const key = firstTryKey(attempt);
+    const first = scored.indexOf(key) === -1;
     const added = first && attempt.state === "correct" ? 3 : 1;
     const ended = session.endedDrills;
     const keeper = attempt.drillId === goalkeeperId;
@@ -32,7 +40,7 @@
       points: session.points + added,
       endedDrills:
         keeper || already ? ended : Object.freeze(ended.concat(attempt.drillId)),
-      scoredDrills: first ? Object.freeze(scored.concat(attempt.drillId)) : scored,
+      scoredDrills: first ? Object.freeze(scored.concat(key)) : scored,
     });
   }
 

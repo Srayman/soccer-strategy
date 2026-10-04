@@ -18,7 +18,7 @@ Goalkeeper step-out is one starter drill with three pictures. The ended list gai
 
 Points are awarded when the attempt ends. A miss adds 1. A correct first try adds 3. A later ending adds 1 and cannot add 3.
 
-The goalkeeper first-try key is the drill plus the angle. Other drills use the drill id.
+The goalkeeper first-try key is the drill plus the angle. Other drills use the drill id. Level 2 keeps a separate first try for that same drill, so either level can still add 3 on its own first correct ending.
 
 ## Settle
 
