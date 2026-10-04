@@ -6,7 +6,7 @@ The game has one drill catalog. Each drill is a drag or a pick, and it sits in s
 
 A drag attempt and a pick attempt each use three states: playing, correct, and miss.
 
-Only miss carries answer spots. Correct shows the line "You found a spot." and draws no correction spots.
+Only miss carries answer spots. Correct shows the line "You found a spot." and draws no correction spots. A correct ending also shows a short visual celebration. A miss does not.
 
 ## Progress and points
 

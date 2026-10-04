@@ -22,7 +22,7 @@ Points reset when the page closes. They are a fun count, not a grade.
 
 ## After the try
 
-A correct try shows a short confirmation, does not draw correction spots, and turns on the next-play button. On a miss the button stays off until the answer is on screen. The button plays one fixed animation. There is no physics.
+A correct try shows a short confirmation, does not draw correction spots, and turns on the next-play button. It also shows a short visual celebration. On a miss the button stays off until the answer is on screen, and the page does not celebrate. The button plays one fixed animation. There is no physics.
 
 ## Tiers
 
