@@ -377,11 +377,33 @@ test("goalkeeper step-out is one starter with three pictures", () => {
   assert.equal(through.opponents.length, 1);
   assert.equal(through.teammates.length, 0);
   assert.notEqual(through.opponents[0].name, "shooter");
+  assert.equal(
+    through.opponents.some((actor) => actor.name === "shooter"),
+    false
+  );
   assert.ok(dist(through.opponents[0], through.ball) > through.goodSpots[0].r);
   assert.equal(through.ball.y, pitch.sixEdgeY);
   assert.ok(through.ball.x > pitch.sixLeftX && through.ball.x < pitch.sixRightX);
   assert.equal(through.goodSpots[0].x, through.ball.x);
   assert.equal(through.goodSpots[0].y, through.ball.y);
+  assert.equal(scene.angles[2].id, "through-ball");
+  assert.equal(scene.angles[2].label, "Free ball");
+});
+
+test("the third goalkeeper picture control stays in reach while playing", () => {
+  const source = fs.readFileSync(path.join(__dirname, "..", "js", "starter-scenes.js"), "utf8");
+  const css = fs.readFileSync(path.join(__dirname, "..", "css", "game.css"), "utf8");
+  const slot = source.slice(source.indexOf("function slot("), source.indexOf("function sceneLayer("));
+  assert.match(slot, /querySelector\("\.pitch-copy"\)/);
+  assert.match(slot, /insertBefore\(el, copy\.firstChild\)/);
+  const angles = source.slice(source.indexOf("function renderAngles("), source.indexOf("function selectAngle("));
+  assert.match(angles, /scene\.angles\.forEach/);
+  assert.doesNotMatch(angles, /slice\(0,\s*2\)/);
+  assert.match(angles, /button\.disabled = !playing/);
+  assert.match(css, /\.starter-angles\[hidden\]\s*\{[^}]*display:\s*none/);
+  const compact = css.slice(css.indexOf("@media (max-width: 800px), (max-height: 500px)"));
+  assert.match(compact, /\.starter-angles\s*\{[^}]*position:\s*sticky/);
+  assert.match(compact, /\.starter-angles\s*\{[^}]*flex-wrap:\s*nowrap/);
 });
 
 test("check away picks the move into open space", () => {
