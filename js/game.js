@@ -34,6 +34,7 @@
   let currentId = null;
   let attempt = null;
   let drag = null;
+  let level = 1;
   let session = pointsApi.createSession();
   let clearance = clearApi.createClearance();
 
@@ -144,6 +145,24 @@
     nextPlayEl.disabled = !nextPlayApi.buttonEnabled(attempt);
   }
 
+  function freshAttempt(drill) {
+    if (typeof attemptApi.createLevelAttempt === "function") {
+      return attemptApi.createLevelAttempt(drill, level);
+    }
+    if (drill.kind === "drag") return attemptApi.createAttempt(drill);
+    if (drill.kind === "pick") return attemptApi.createPickAttempt(drill);
+    return null;
+  }
+
+  function paintLevels() {
+    const group = document.querySelector("#play-level");
+    if (!group) return;
+    group.querySelectorAll("button[data-level]").forEach((button) => {
+      const on = Number(button.dataset.level) === level;
+      button.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+  }
+
   function startDrill(drill) {
     if (!drill || !api.canStart(drill, session.endedDrills)) return;
     document.dispatchEvent(
@@ -151,9 +170,7 @@
     );
     currentId = drill.id;
     drag = null;
-    if (drill.kind === "drag") attempt = attemptApi.createAttempt(drill);
-    else if (drill.kind === "pick") attempt = attemptApi.createPickAttempt(drill);
-    else attempt = null;
+    attempt = freshAttempt(drill);
     sync();
   }
 
@@ -473,7 +490,7 @@
     view.correctionSpots.forEach((spot) => {
       layer.append(paintSpot(spot));
     });
-    if (!view.targets) {
+    if (attempt.token) {
       layer.append(paintToken(attempt.token, view.draggable));
     }
     const motion = nextPlayApi.animationFor(attempt);
@@ -508,13 +525,35 @@
     const drill = drills.find((entry) => entry.id === currentId);
     if (!drill) return;
     drag = null;
-    if (drill.kind === "drag") attempt = attemptApi.createAttempt(drill);
+    if (typeof attemptApi.createLevelAttempt === "function") {
+      attempt = attemptApi.createLevelAttempt(drill, level);
+    } else if (drill.kind === "drag") attempt = attemptApi.createAttempt(drill);
     else if (drill.kind === "pick") attempt = attemptApi.createPickAttempt(drill);
     else return;
     sync();
   });
 
+  const playLevelEl = document.querySelector("#play-level");
+  if (playLevelEl) {
+    playLevelEl.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-level]");
+      if (!button) return;
+      const nextLevel = Number(button.dataset.level);
+      if (nextLevel !== 1 && nextLevel !== 2) return;
+      if (nextLevel === level) return;
+      level = nextLevel;
+      paintLevels();
+      if (!currentId) return;
+      const drill = drills.find((entry) => entry.id === currentId);
+      if (!drill || !api.canStart(drill, session.endedDrills)) return;
+      drag = null;
+      attempt = freshAttempt(drill);
+      sync();
+    });
+  }
+
   renderList();
+  paintLevels();
   renderStatus();
   renderPoints();
 })();
