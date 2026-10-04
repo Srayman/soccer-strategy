@@ -143,11 +143,10 @@
     }
 
     if (attempt && attempt.state === "miss") {
-      statusEl.textContent = "Good spots are shown.";
-      pitchEl.setAttribute(
-        "aria-label",
-        "Top-down soccer pitch. Good spots are shown."
-      );
+      const answer =
+        attempt.kind === "pick" ? "The answer is shown." : "Good spots are shown.";
+      statusEl.textContent = answer;
+      pitchEl.setAttribute("aria-label", "Top-down soccer pitch. " + answer);
       return;
     }
 
@@ -192,6 +191,56 @@
 
   function movePiece(piece, point) {
     piece.setAttribute("transform", "translate(" + point.x + " " + point.y + ")");
+  }
+
+  function chooseTarget(mark) {
+    const view = attempt ? attemptApi.presentation(attempt) : null;
+    if (!view || !view.pickable) return;
+    const targetId = mark.getAttribute("data-target-id");
+    // pick reveals a miss answer before it marks the attempt over.
+    attempt = attemptApi.pick(attempt, targetId);
+    renderAttempt();
+    renderStatus();
+  }
+
+  function onPick(event) {
+    event.preventDefault();
+    chooseTarget(event.currentTarget);
+  }
+
+  function onPickKey(event) {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    chooseTarget(event.currentTarget);
+  }
+
+  function paintTarget(target, pickable) {
+    const mark = svgEl("g", {
+      class: "marked-target",
+      "data-target-id": target.id,
+      "data-pickable": pickable ? "true" : "false",
+    });
+    mark.append(
+      svgEl("circle", {
+        class: "marked-target-spot",
+        cx: target.x,
+        cy: target.y,
+        r: target.r,
+      })
+    );
+    const title = document.createElementNS(svgNS, "title");
+    title.textContent = "Marked target";
+    mark.append(title);
+    if (pickable) {
+      mark.setAttribute("role", "button");
+      mark.setAttribute("tabindex", "0");
+      mark.setAttribute("aria-label", "Choose this marked target");
+      mark.addEventListener("click", onPick);
+      mark.addEventListener("keydown", onPickKey);
+    } else {
+      mark.setAttribute("aria-hidden", "true");
+    }
+    return mark;
   }
 
   function onPointerDown(event) {
@@ -271,6 +320,15 @@
     layer.replaceChildren();
 
     const view = attemptApi.presentation(attempt);
+    if (view.targets) {
+      view.targets.forEach((target) => {
+        layer.append(paintTarget(target, view.pickable));
+      });
+      view.correctionSpots.forEach((spot) => {
+        layer.append(paintSpot(spot));
+      });
+      return;
+    }
     view.correctionSpots.forEach((spot) => {
       layer.append(paintSpot(spot));
     });
@@ -294,7 +352,9 @@
     if (!drill || !api.canStart(drill)) return;
     currentId = drill.id;
     drag = null;
-    attempt = drill.kind === "drag" ? attemptApi.createAttempt(drill) : null;
+    if (drill.kind === "drag") attempt = attemptApi.createAttempt(drill);
+    else if (drill.kind === "pick") attempt = attemptApi.createPickAttempt(drill);
+    else attempt = null;
     sync();
   });
 

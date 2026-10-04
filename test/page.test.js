@@ -31,3 +31,12 @@ test("the page renders a drag attempt and does not judge spots", () => {
   assert.doesNotMatch(game, /better|worse|Math\.hypot/);
   assert.doesNotMatch(game, /\b(pass|fail)\b/i);
 });
+
+test("the page asks for one pick and does not judge the marked target", () => {
+  const game = fs.readFileSync(path.join(root, "js", "game.js"), "utf8");
+  assert.match(game, /createPickAttempt\(/);
+  assert.match(game, /attemptApi\.pick\(/);
+  assert.doesNotMatch(game, /correctTarget/);
+  assert.doesNotMatch(game, /markedTargets/);
+  assert.doesNotMatch(game, /\b(pass|fail)\b/i);
+});
