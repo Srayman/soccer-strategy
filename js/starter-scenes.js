@@ -250,6 +250,7 @@
       ball: at(250, 860),
       teammates: Object.freeze([at(250, 860, "passer")]),
       opponents: Object.freeze([at(420, 680)]),
+      learner: at(480, 700),
       targets: Object.freeze([
         mark("a", "still", 480, 700, 32),
         mark("c", "into", 390, 730, 32),
@@ -264,6 +265,7 @@
       ball: at(360, 720),
       teammates: Object.freeze([at(360, 720, "carrier"), at(360, 560)]),
       opponents: Object.freeze([at(410, 690)]),
+      learner: at(220, 640),
       targets: Object.freeze([
         mark("a", "line", 360, 880, 32),
         mark("c", "beside", 300, 750, 32),
@@ -278,6 +280,7 @@
       ball: at(320, 500),
       teammates: Object.freeze([at(320, 500)]),
       opponents: Object.freeze([at(240, 560)]),
+      learner: at(70, 700),
       targets: Object.freeze([
         mark("a", "start", 70, 700, 34),
         mark("c", "feet", 240, 560, 34),

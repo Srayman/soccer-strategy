@@ -85,11 +85,13 @@ test("starter scenes are the 20 starter drills and nothing else", () => {
 test("each picture stays on the pitch and the learner starts outside the good spot", () => {
   for (const scene of scenes) {
     for (const { id, frame } of frames(scene)) {
-      if (frame.ball) onPitch(frame.ball);
+      assert.ok(frame.ball, id);
+      onPitch(frame.ball);
       for (const actor of frame.teammates || []) onPitch(actor);
       for (const actor of frame.opponents || []) onPitch(actor);
-      if (frame.learner) onPitch(frame.learner);
-      if (scene.learner) onPitch(scene.learner);
+      const you = frame.learner || scene.learner;
+      assert.ok(you, id);
+      onPitch(you);
       if (scene.kind === "drag") {
         assert.equal(frame.goodSpots.length, 1, id);
         const spot = frame.goodSpots[0];
@@ -380,6 +382,9 @@ test("check away picks the move into open space", () => {
   assert.equal(away.id, correctTarget.id);
   assert.equal(scene.teammates.length, 1);
   assert.equal(scene.opponents.length, 1);
+  assert.ok(dist(scene.learner, scene.ball) > 100);
+  assert.ok(dist(scene.learner, defender) < 80);
+  assert.ok(dist(scene.learner, still) < 5);
   assert.ok(dist(away, defender) > dist(still, defender));
   assert.ok(dist(away, defender) > dist(into, defender));
   const toBall = {
@@ -406,6 +411,12 @@ test("triangle picks the open corner", () => {
   function area(a, b, c) {
     return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
   }
+  assert.notEqual(area(mates[0], mates[1], scene.learner), 0);
+  assert.ok(dist(scene.learner, scene.ball) > 36);
+  for (const mate of mates) assert.ok(dist(scene.learner, mate) > 36);
+  for (const target of scene.targets) {
+    assert.ok(dist(scene.learner, target) > target.r);
+  }
   assert.equal(area(mates[0], mates[1], line), 0);
   assert.notEqual(area(mates[0], mates[1], corner), 0);
   assert.ok(dist(beside, scene.ball) < dist(corner, scene.ball));
@@ -419,6 +430,8 @@ test("wall pass picks the space behind the defender", () => {
   const feet = named(scene.targets, "feet");
   const defender = scene.opponents[0];
   assert.equal(behind.id, correctTarget.id);
+  assert.ok(dist(scene.learner, start) < 5);
+  assert.ok(dist(scene.learner, scene.ball) > 40);
   assert.ok(behind.y < defender.y);
   assert.ok(behind.x < defender.x);
   assert.ok(dist(feet, defender) < 5);
