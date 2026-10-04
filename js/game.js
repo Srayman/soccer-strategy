@@ -71,7 +71,7 @@
   }
 
   function renderDrill(drill) {
-    const locked = api.isLocked(drill);
+    const locked = api.isLocked(drill, session.endedDrills);
     const item = document.createElement("li");
     item.className = "drill" + (locked ? " is-locked" : "");
     item.dataset.drillId = drill.id;
@@ -96,12 +96,15 @@
   }
 
   function paintButton(item, drill, button) {
+    const locked = api.isLocked(drill, session.endedDrills);
     const playing = drill.id === currentId;
+    item.classList.toggle("is-locked", locked);
+    item.dataset.locked = locked ? "true" : "false";
     item.classList.toggle("is-playing", playing);
     if (playing) item.setAttribute("aria-current", "true");
     else item.removeAttribute("aria-current");
 
-    if (api.isLocked(drill)) {
+    if (locked) {
       button.disabled = true;
       button.textContent = "Locked";
       button.removeAttribute("data-action");
@@ -135,7 +138,10 @@
   }
 
   function startDrill(drill) {
-    if (!drill || !api.canStart(drill)) return;
+    if (!drill || !api.canStart(drill, session.endedDrills)) return;
+    document.dispatchEvent(
+      new CustomEvent("starter-scene-reset", { detail: { drillId: drill.id } })
+    );
     currentId = drill.id;
     drag = null;
     if (drill.kind === "drag") attempt = attemptApi.createAttempt(drill);
@@ -144,9 +150,17 @@
     sync();
   }
 
+  function refreshDrills() {
+    listEl.querySelectorAll(".drill").forEach((item) => {
+      const drill = drills.find((entry) => entry.id === item.dataset.drillId);
+      paintButton(item, drill, item.querySelector("button"));
+    });
+  }
+
   function settleEnded(previous) {
     if (attempt && attempt.ended === true && attempt !== previous) {
       session = pointsApi.settle(session, attempt);
+      refreshDrills();
     }
     renderPoints();
   }
@@ -402,10 +416,7 @@
   }
 
   function sync() {
-    listEl.querySelectorAll(".drill").forEach((item) => {
-      const drill = drills.find((entry) => entry.id === item.dataset.drillId);
-      paintButton(item, drill, item.querySelector("button"));
-    });
+    refreshDrills();
     renderAttempt();
     renderStatus();
     renderPoints();
@@ -424,14 +435,16 @@
     startDrill(nextPlayApi.nextInTier(drills, currentId));
   });
 
-  // Starter scenes ask for this when the goalkeeper picture changes
-  // before the drag. The drag rules stay the same.
+  // The scene asks for this when its picture changes before the try ends.
+  // The drag and pick rules stay the same. One ended attempt still clears the drill.
   document.addEventListener("starter-scene-change", () => {
     if (!currentId || !attempt || attempt.state !== "playing") return;
     const drill = drills.find((entry) => entry.id === currentId);
-    if (!drill || drill.kind !== "drag") return;
+    if (!drill) return;
     drag = null;
-    attempt = attemptApi.createAttempt(drill);
+    if (drill.kind === "drag") attempt = attemptApi.createAttempt(drill);
+    else if (drill.kind === "pick") attempt = attemptApi.createPickAttempt(drill);
+    else return;
     sync();
   });
 

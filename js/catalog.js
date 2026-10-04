@@ -1,5 +1,6 @@
 // Names, kinds, and tiers follow docs/PLAN.md.
-// Next and advanced stay locked. Unlocking a tier is a later change.
+// Starters can start immediately. Next stays locked until every starter
+// has ended once. Advanced stays locked until every next drill has ended once.
 (function (root, factory) {
   const api = factory();
   if (typeof module === "object" && module.exports) {
@@ -98,12 +99,33 @@
     )
   );
 
-  function isLocked(drill) {
-    return drill.tier !== "starter";
+  function clearedIds(cleared) {
+    return Array.isArray(cleared) ? cleared : [];
   }
 
-  function canStart(drill) {
-    return drill.tier === "starter";
+  function everyEnded(tier, cleared) {
+    const done = clearedIds(cleared);
+    return drills
+      .filter(function (drill) {
+        return drill.tier === tier;
+      })
+      .every(function (drill) {
+        return done.indexOf(drill.id) !== -1;
+      });
+  }
+
+  // A missing cleared list is a fresh page: only starters can start.
+  // One ended attempt clears that drill. Picture ids are not drills.
+  function isLocked(drill, cleared) {
+    if (!drill) return true;
+    if (drill.tier === "starter") return false;
+    if (drill.tier === "next") return !everyEnded("starter", cleared);
+    if (drill.tier === "advanced") return !everyEnded("next", cleared);
+    return true;
+  }
+
+  function canStart(drill, cleared) {
+    return Boolean(drill) && isLocked(drill, cleared) === false;
   }
 
   return Object.freeze({
