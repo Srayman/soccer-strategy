@@ -45,6 +45,12 @@ body {
   color: var(--muted);
 }
 
+.site-header .points {
+  margin-top: 0.55rem;
+  color: var(--ink);
+  font-weight: 700;
+}
+
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.8fr);
