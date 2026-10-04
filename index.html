@@ -9,9 +9,23 @@
   <body>
     <header class="site-header">
       <h1>Soccer strategy</h1>
-      <p>Look down on the pitch and start a starter drill.</p>
+      <button
+        id="game-help"
+        type="button"
+        class="help-control"
+        aria-expanded="false"
+        aria-controls="game-help-panel"
+      >?</button>
       <p id="points" class="points" aria-live="polite">Points: 0</p>
     </header>
+    <dialog id="game-help-panel" class="help-panel" aria-labelledby="game-help-title">
+      <h2 id="game-help-title">How to play</h2>
+      <p>Look down on the pitch and start a starter drill.</p>
+      <p>White is you. Blue is your team. Red is the other team.</p>
+      <p>Level 1: tap a ring. Level 2: drag the white player.</p>
+      <p>Attack is the top goal. Defend is the bottom goal.</p>
+      <button type="button" class="help-close" data-action="close-help">Close</button>
+    </dialog>
     <main class="layout">
       <section class="pitch-panel" aria-labelledby="pitch-heading">
         <div class="pitch-copy">
