@@ -46,9 +46,11 @@ body {
 }
 
 .site-header .points {
-  margin-top: 0.55rem;
-  color: var(--ink);
+  margin-top: 0.35rem;
+  color: var(--accent);
   font-weight: 700;
+  font-size: 1.75rem;
+  line-height: 1.1;
 }
 
 .layout {
@@ -446,6 +448,7 @@ body {
 
   .site-header .points {
     margin-top: 0;
+    font-size: 1.2rem;
   }
 
   .layout {

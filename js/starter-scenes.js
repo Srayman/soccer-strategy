@@ -339,6 +339,24 @@
 
   let angleId = "central";
   let wrapped = false;
+  let paintScene = function () {};
+
+  function missSpotLine(attempt) {
+    if (!attempt || attempt.state !== "miss") return "";
+    const lines = globalThis.SoccerSpotLines;
+    if (!lines || typeof lines.lineFor !== "function") return "";
+    const scene = sceneOf(attempt.drillId);
+    let pictureId = "";
+    if (attempt.pictureId && scene && scene.pictures && scene.pictures[attempt.pictureId]) {
+      pictureId = attempt.pictureId;
+    } else if (scene && scene.angles && scene.angles.length) {
+      const known = scene.angles.some(function (angle) {
+        return angle.id === angleId;
+      });
+      pictureId = known ? angleId : scene.angles[0].id;
+    }
+    return lines.lineFor(attempt.drillId, pictureId);
+  }
 
   function playedScene(id) {
     const play = globalThis.SoccerScenePlay;
@@ -470,13 +488,17 @@
       correctTarget: inner.correctTarget,
       presentation: function (attempt) {
         const view = inner.presentation(attempt);
-        if (!attempt || !attempt.levelMarks) return view;
+        const spotLine = missSpotLine(attempt);
+        if (!attempt || !attempt.levelMarks) {
+          return Object.freeze(Object.assign({}, view, { spotLine: spotLine }));
+        }
         const playing = attempt.state === "playing" && attempt.ended === false;
         return Object.freeze(
           Object.assign({}, view, {
             targets: attempt.levelMarks,
             pickable: attempt.level === 1 && playing,
             draggable: attempt.level === 2 && playing,
+            spotLine: spotLine,
           })
         );
       },
@@ -877,6 +899,8 @@
       decorateToken();
     }
 
+    paintScene = draw;
+
     document.addEventListener("click", function () {
       draw();
     });
@@ -897,5 +921,8 @@
     markersFor: markersFor,
     usePicture: usePicture,
     install: install,
+    redraw: function () {
+      paintScene();
+    },
   });
 });
