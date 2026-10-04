@@ -2,10 +2,12 @@
   const api = globalThis.SoccerStrategy;
   const attemptApi = globalThis.SoccerAttempt;
   const pointsApi = globalThis.SoccerPoints;
+  const nextPlayApi = globalThis.SoccerNextPlay;
   const drills = api.drills;
   const listEl = document.querySelector("#drill-list");
   const statusEl = document.querySelector("#play-status");
   const pointsEl = document.querySelector("#points");
+  const nextPlayEl = document.querySelector("#next-play");
   const pitchEl = document.querySelector("#pitch");
   const svgNS = "http://www.w3.org/2000/svg";
 
@@ -128,6 +130,20 @@
     pointsEl.textContent = "Points: " + session.points;
   }
 
+  function renderNextPlay() {
+    nextPlayEl.disabled = !nextPlayApi.buttonEnabled(attempt);
+  }
+
+  function startDrill(drill) {
+    if (!drill || !api.canStart(drill)) return;
+    currentId = drill.id;
+    drag = null;
+    if (drill.kind === "drag") attempt = attemptApi.createAttempt(drill);
+    else if (drill.kind === "pick") attempt = attemptApi.createPickAttempt(drill);
+    else attempt = null;
+    sync();
+  }
+
   function settleEnded(previous) {
     if (attempt && attempt.ended === true && attempt !== previous) {
       session = pointsApi.settle(session, attempt);
@@ -136,6 +152,7 @@
   }
 
   function renderStatus() {
+    renderNextPlay();
     const current = drills.find((drill) => drill.id === currentId) || null;
     const view = attempt ? attemptApi.presentation(attempt) : null;
     statusEl.dataset.state = attempt ? attempt.state : "";
@@ -326,6 +343,37 @@
     return piece;
   }
 
+  function paintMotion(motion) {
+    const start = motion.frames[0];
+    const end = motion.frames[motion.frames.length - 1];
+    const group = svgEl("g", {
+      id: "next-moment",
+      class: "next-moment",
+      "data-animation": motion.id,
+    });
+    const runner = svgEl("circle", {
+      class: "next-moment-runner",
+      cx: start.x,
+      cy: start.y,
+      r: 16,
+    });
+    const dx = end.x - start.x;
+    const dy = end.y - start.y;
+    runner.append(
+      svgEl("animateMotion", {
+        dur: motion.durationMs + "ms",
+        repeatCount: motion.repeatCount,
+        fill: "freeze",
+        begin: "0s",
+        path: "M 0 0 L " + dx + " " + dy,
+      })
+    );
+    const title = document.createElementNS(svgNS, "title");
+    title.textContent = "Next moment";
+    group.append(title, runner);
+    return group;
+  }
+
   function renderAttempt() {
     const existing = pitchEl.querySelector("#attempt-layer");
     if (!attempt) {
@@ -342,15 +390,15 @@
       view.targets.forEach((target) => {
         layer.append(paintTarget(target, view.pickable));
       });
-      view.correctionSpots.forEach((spot) => {
-        layer.append(paintSpot(spot));
-      });
-      return;
     }
     view.correctionSpots.forEach((spot) => {
       layer.append(paintSpot(spot));
     });
-    layer.append(paintToken(attempt.token, view.draggable));
+    if (!view.targets) {
+      layer.append(paintToken(attempt.token, view.draggable));
+    }
+    const motion = nextPlayApi.animationFor(attempt);
+    if (motion) layer.append(paintMotion(motion));
   }
 
   function sync() {
@@ -368,13 +416,12 @@
     if (!button) return;
     const item = button.closest("[data-drill-id]");
     const drill = drills.find((entry) => entry.id === item.dataset.drillId);
-    if (!drill || !api.canStart(drill)) return;
-    currentId = drill.id;
-    drag = null;
-    if (drill.kind === "drag") attempt = attemptApi.createAttempt(drill);
-    else if (drill.kind === "pick") attempt = attemptApi.createPickAttempt(drill);
-    else attempt = null;
-    sync();
+    startDrill(drill);
+  });
+
+  nextPlayEl.addEventListener("click", () => {
+    if (!nextPlayApi.buttonEnabled(attempt)) return;
+    startDrill(nextPlayApi.nextInTier(drills, currentId));
   });
 
   renderList();
