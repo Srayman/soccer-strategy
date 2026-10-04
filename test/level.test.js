@@ -305,71 +305,102 @@ test("level 1 copy says pick and level 2 copy says drag", () => {
   assert.doesNotMatch(handler, /settle\(/);
 });
 
-test("level 2 hides zones and keeps pick marks on screen", () => {
+test("level 2 hides the correct spot and the wrong choices", () => {
   const attempt = harness.attempt;
+  const play = require("../js/scene-play.js");
   const game = fs.readFileSync(path.join(root, "js", "game.js"), "utf8");
   const render = game.slice(game.indexOf("function renderAttempt"), game.indexOf("function sync"));
   assert.match(render, /visibleTargets/);
+  assert.match(render, /view\.visibleTargets \|\| view\.targets/);
 
   const openLevel1 = attempt.presentation(attempt.createLevelAttempt(openBody, 1));
   assert.equal(openLevel1.visibleTargets, undefined);
+  assert.equal(openLevel1.pickable, true);
   assert.equal(openLevel1.targets.find((mark) => mark.id === "b").r, 44);
-  assert.equal(openLevel1.targets[0].r, 44);
-
-  const openLevel2 = attempt.createLevelAttempt(openBody, 2);
-  const openView = attempt.presentation(openLevel2);
-  assert.equal(openView.targets[0].r, 88);
-  assert.equal(openView.targets[0].zone, true);
-  assert.equal(openView.visibleTargets.some((mark) => mark.zone), false);
-  assert.equal(
-    openView.visibleTargets.some((mark) => mark.x === 420 && mark.y === 676),
-    false
+  assert.ok(
+    openLevel1.targets.filter((mark) => mark.id !== "b").length === 2 ||
+      openLevel1.targets.filter((mark) => mark.id !== "b").length === 3
   );
-  assert.ok(openView.visibleTargets.length >= 1);
-  const openChoice = openView.visibleTargets[0];
-  assert.notEqual(openChoice.id, "b");
-  const openMiss = attempt.drop(attempt.createLevelAttempt(openBody, 2), {
-    x: openChoice.x,
-    y: openChoice.y,
-  });
-  assert.equal(openMiss.state, "miss");
-  assert.equal(openMiss.token.x, openChoice.x);
-  assert.equal(openMiss.token.y, openChoice.y);
 
-  const away = attempt.presentation(attempt.createLevelAttempt(checkAway, 2));
-  assert.deepEqual(
-    away.visibleTargets.map((mark) => mark.id),
-    away.targets.map((mark) => mark.id)
-  );
-  assert.ok(away.visibleTargets.some((mark) => mark.id === "b"));
-  assert.ok(away.visibleTargets.some((mark) => mark.id !== "b"));
+  function picturesOf(drill) {
+    const scene = scenes.byId[drill.id] || play.sceneFor(drill.id);
+    if (!scene || !scene.pictures) return [""];
+    return Object.keys(scene.pictures);
+  }
 
-  for (const drill of drills) {
-    const level2 = attempt.createLevelAttempt(drill, 2);
-    const view = attempt.presentation(level2);
-    if (drill.kind === "drag") {
-      assert.equal(view.visibleTargets.some((mark) => mark.zone), false, drill.id);
-      assert.ok(view.visibleTargets.length >= 1, drill.id);
-      assert.ok(view.visibleTargets.every((mark) => mark.id !== "b"), drill.id);
-      const choice = view.visibleTargets[0];
-      const missed = attempt.drop(attempt.createLevelAttempt(drill, 2), {
-        x: choice.x,
-        y: choice.y,
-      });
-      assert.equal(missed.state, "miss", drill.id);
-      assert.equal(missed.token.x, choice.x, drill.id);
-      assert.equal(missed.token.y, choice.y, drill.id);
-    } else {
-      assert.equal(view.visibleTargets.length, view.targets.length, drill.id);
-      assert.ok(view.visibleTargets.some((mark) => mark.id === "b"), drill.id);
+  function hiddenWrongs(level2) {
+    const choices = level2.wrongChoices || [];
+    const marks = (level2.levelMarks || []).filter((mark) => mark.id !== "b");
+    return choices.concat(marks);
+  }
+
+  function shownAt(list, spot) {
+    return (list || []).some((mark) => mark.x === spot.x && mark.y === spot.y);
+  }
+
+  try {
+    for (const drill of drills) {
+      for (const pictureId of picturesOf(drill)) {
+        const label = drill.id + (pictureId ? " " + pictureId : "");
+        if (pictureId) assert.equal(scenes.usePicture(pictureId), pictureId, label);
+        const level2 = attempt.createLevelAttempt(drill, 2);
+        const view = attempt.presentation(level2);
+        assert.equal(level2.level, 2, label);
+        assert.notEqual(level2.kind, "pick", label);
+        assert.equal(view.draggable, true, label);
+        assert.equal(view.pickable, false, label);
+        assert.ok(Array.isArray(view.visibleTargets), label);
+        assert.equal(view.visibleTargets.length, 0, label);
+        assert.ok(view.targets.some((mark) => mark.id === "b"), label);
+        assert.equal(view.visibleTargets.some((mark) => mark.id === "b"), false, label);
+        assert.equal(view.visibleTargets.some((mark) => mark.zone), false, label);
+
+        const good = level2.goodSpots[0];
+        assert.equal(shownAt(view.visibleTargets, good), false, label);
+        const hit = attempt.drop(attempt.createLevelAttempt(drill, 2), {
+          x: good.x,
+          y: good.y,
+        });
+        assert.equal(hit.state, "correct", label);
+        assert.equal(hit.ended, true, label);
+        assert.equal(hit.token.x, good.x, label);
+        assert.equal(hit.token.y, good.y, label);
+        assert.equal(attempt.presentation(hit).visibleTargets.length, 0, label);
+        assert.deepEqual(attempt.presentation(hit).correctionSpots, [], label);
+
+        const wrongs = hiddenWrongs(level2);
+        assert.ok(wrongs.length >= 1, label);
+        for (const choice of wrongs) {
+          assert.equal(shownAt(view.visibleTargets, choice), false, label);
+          const missed = attempt.drop(attempt.createLevelAttempt(drill, 2), {
+            x: choice.x,
+            y: choice.y,
+          });
+          assert.equal(missed.state, "miss", label + " " + choice.id);
+          assert.equal(missed.ended, true, label);
+          assert.equal(missed.token.x, choice.x, label + " " + choice.id);
+          assert.equal(missed.token.y, choice.y, label + " " + choice.id);
+          const missView = attempt.presentation(missed);
+          assert.equal(missView.visibleTargets.length, 0, label);
+          assert.equal(shownAt(missView.visibleTargets, good), false, label);
+          assert.equal(shownAt(missView.visibleTargets, choice), false, label);
+          assert.ok(
+            missView.correctionSpots.some((spot) => spot.x === good.x && spot.y === good.y),
+            label
+          );
+        }
+      }
     }
+  } finally {
+    scenes.usePicture("central");
   }
 
   const zones = drills.find((drill) => drill.id === "zones");
-  const zonesView = attempt.presentation(attempt.createLevelAttempt(zones, 2));
+  const zonesLevel = attempt.createLevelAttempt(zones, 2);
+  const zonesView = attempt.presentation(zonesLevel);
   assert.equal(zonesView.targets.some((mark) => mark.zone), true);
-  assert.equal(zonesView.visibleTargets.some((mark) => mark.zone), false);
-  assert.ok(zonesView.visibleTargets.length >= 1);
+  assert.equal(zonesView.visibleTargets.length, 0);
+  assert.ok((zonesLevel.wrongChoices || []).length >= 1);
 });
 
 test("level 1 offers two or three wrong spots and a wrong pick is a miss", () => {

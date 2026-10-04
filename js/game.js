@@ -541,7 +541,7 @@
     layer.replaceChildren();
 
     const view = attemptApi.presentation(attempt);
-    // Level 2 sends visibleTargets so a zone is not drawn. Pick marks still are.
+    // Level 2 sends visibleTargets so the good spot and wrong choices stay undrawn.
     const painted = view.visibleTargets || view.targets;
     if (painted) {
       painted.forEach((target) => {

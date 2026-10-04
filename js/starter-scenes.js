@@ -441,7 +441,7 @@
           y: spot.y,
           r: level === 2 ? drawn * 2 : drawn,
         };
-        // A drag spot is a zone. Level 2 hides it. A pick mark is not a zone.
+        // A drag spot is a zone. A pick mark is not. Level 2 hides both.
         if (fromDrag) mark.zone = true;
         return Object.freeze(mark);
       });
@@ -631,13 +631,10 @@
           draggable: attempt.level === 2 && playing,
           spotLine: spotLine,
         };
-        // Level 2 hides zones. Pick marks stay. Wrong choices stay.
+        // Level 2 hides the correct spot and every wrong choice.
+        // The marks stay on the attempt, so a drop on either still counts.
         if (attempt.level === 2) {
-          shown.visibleTargets = Object.freeze(
-            attempt.levelMarks.filter(function (mark) {
-              return !mark.zone;
-            }).concat(attempt.wrongChoices || [])
-          );
+          shown.visibleTargets = Object.freeze([]);
         }
         return Object.freeze(Object.assign({}, view, shown));
       },
