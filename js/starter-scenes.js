@@ -339,6 +339,24 @@
 
   let angleId = "central";
   let wrapped = false;
+  let paintScene = function () {};
+
+  function missSpotLine(attempt) {
+    if (!attempt || attempt.state !== "miss") return "";
+    const lines = globalThis.SoccerSpotLines;
+    if (!lines || typeof lines.lineFor !== "function") return "";
+    const scene = sceneOf(attempt.drillId);
+    let pictureId = "";
+    if (attempt.pictureId && scene && scene.pictures && scene.pictures[attempt.pictureId]) {
+      pictureId = attempt.pictureId;
+    } else if (scene && scene.angles && scene.angles.length) {
+      const known = scene.angles.some(function (angle) {
+        return angle.id === angleId;
+      });
+      pictureId = known ? angleId : scene.angles[0].id;
+    }
+    return lines.lineFor(attempt.drillId, pictureId);
+  }
 
   function playedScene(id) {
     const play = globalThis.SoccerScenePlay;
@@ -470,13 +488,17 @@
       correctTarget: inner.correctTarget,
       presentation: function (attempt) {
         const view = inner.presentation(attempt);
-        if (!attempt || !attempt.levelMarks) return view;
+        const spotLine = missSpotLine(attempt);
+        if (!attempt || !attempt.levelMarks) {
+          return Object.freeze(Object.assign({}, view, { spotLine: spotLine }));
+        }
         const playing = attempt.state === "playing" && attempt.ended === false;
         return Object.freeze(
           Object.assign({}, view, {
             targets: attempt.levelMarks,
             pickable: attempt.level === 1 && playing,
             draggable: attempt.level === 2 && playing,
+            spotLine: spotLine,
           })
         );
       },
@@ -670,9 +692,8 @@
         copy.insertBefore(el, copy.firstChild);
         return el;
       }
-      const legend = document.getElementById("starter-legend");
       const caption = document.getElementById("starter-caption");
-      const anchor = id === "starter-caption" ? statusEl : id === "starter-legend" ? caption : legend;
+      const anchor = id === "starter-caption" ? statusEl : caption || statusEl;
       anchor.insertAdjacentElement("afterend", el);
       return el;
     }
@@ -825,28 +846,19 @@
 
     function draw() {
       const caption = slot("starter-caption", "starter-caption");
-      const legend = slot("starter-legend", "starter-legend");
       const scene = currentScene();
       const layer = sceneLayer();
       layer.replaceChildren();
       renderAngles(scene);
       if (!scene) {
         caption.hidden = true;
-        legend.hidden = true;
         caption.textContent = "";
-        legend.textContent = "";
         return;
       }
       const frame = frameFor(scene);
       const captionText = frame.caption || scene.caption || "";
       caption.hidden = captionText === "";
-      legend.hidden = false;
       caption.textContent = captionText;
-      const levelButton = document.querySelector("#play-level button[aria-pressed='true']");
-      const levelTwo = Boolean(levelButton && levelButton.dataset.level === "2");
-      legend.textContent = levelTwo
-        ? "White is you. Blue is your team. Red is the other team."
-        : "White is you. Blue is your team. Red is the other team. Tap a ring.";
       (frame.guides || scene.guides || []).forEach(function (guide) {
         layer.append(
           svgEl("line", {
@@ -890,6 +902,8 @@
       decorateToken();
     }
 
+    paintScene = draw;
+
     document.addEventListener("click", function () {
       draw();
     });
@@ -910,5 +924,8 @@
     markersFor: markersFor,
     usePicture: usePicture,
     install: install,
+    redraw: function () {
+      paintScene();
+    },
   });
 });

@@ -5,6 +5,7 @@
   const clearApi = globalThis.SoccerClear;
   const nextPlayApi = globalThis.SoccerNextPlay;
   const celebrateApi = globalThis.SoccerCelebrate;
+  const progressCopy = globalThis.SoccerProgressCopy;
   const drills = api.drills;
   const listEl = document.querySelector("#drill-list");
   const statusEl = document.querySelector("#play-status");
@@ -53,11 +54,11 @@
 
       const heading = document.createElement("h2");
       heading.id = "tier-" + tier.id;
-      heading.textContent = tier.title + " (" + group.length + ")";
+      heading.textContent = headingText(tier, group);
 
       const note = document.createElement("p");
       note.className = "tier-note";
-      note.textContent = tier.note;
+      note.textContent = noteText(tier);
 
       const list = document.createElement("ul");
       list.className = "drills";
@@ -91,6 +92,22 @@
     idea.className = "drill-idea";
     idea.textContent = drill.idea;
 
+    const more = document.createElement("button");
+    more.type = "button";
+    more.className = "drill-more";
+    more.dataset.action = "more";
+    more.textContent = "More";
+    more.setAttribute("aria-expanded", "false");
+    more.setAttribute("aria-controls", "explainer-" + drill.id);
+    more.setAttribute("aria-label", "More about " + drill.name);
+    idea.append(more);
+
+    const explainer = document.createElement("p");
+    explainer.className = "drill-explainer";
+    explainer.id = "explainer-" + drill.id;
+    explainer.hidden = true;
+    explainer.textContent = drill.explainer;
+
     const kind = document.createElement("span");
     kind.className = "drill-kind";
     kind.textContent = kindLabel(drill.kind);
@@ -98,7 +115,7 @@
     const button = document.createElement("button");
     button.type = "button";
     button.className = "drill-action";
-    item.append(name, idea, kind, button);
+    item.append(name, idea, kind, explainer, button);
     paintButton(item, drill, button);
     return item;
   }
@@ -137,8 +154,43 @@
     button.setAttribute("aria-label", "Start " + drill.name);
   }
 
+  function drillsIn(tierId) {
+    return drills.filter((drill) => drill.tier === tierId);
+  }
+
+  function doneIn(tierId) {
+    return drillsIn(tierId).filter((drill) => session.endedDrills.indexOf(drill.id) !== -1)
+      .length;
+  }
+
+  function headingText(tier, group) {
+    if (tier.id === "starter") {
+      return progressCopy.starterHeading(tier.title, doneIn("starter"), group.length);
+    }
+    return tier.title + " (" + group.length + ")";
+  }
+
+  function noteText(tier) {
+    if (tier.id === "starter") return tier.note;
+    const gate = tier.id === "next" ? "starter" : "next";
+    const total = drillsIn(gate).length;
+    return progressCopy.lockedLeft(total - doneIn(gate), gate);
+  }
+
+  function paintTierCopy() {
+    listEl.querySelectorAll(".tier").forEach((section) => {
+      const tier = tiers.find((entry) => entry.id === section.dataset.tier);
+      if (!tier) return;
+      const group = drillsIn(tier.id);
+      const heading = section.querySelector("h2");
+      const note = section.querySelector(".tier-note");
+      if (heading) heading.textContent = headingText(tier, group);
+      if (note) note.textContent = noteText(tier);
+    });
+  }
+
   function renderPoints() {
-    pointsEl.textContent = "Points: " + session.points;
+    pointsEl.textContent = "Score: " + session.points;
   }
 
   function renderNextPlay() {
@@ -175,9 +227,10 @@
   }
 
   function refreshDrills() {
+    paintTierCopy();
     listEl.querySelectorAll(".drill").forEach((item) => {
       const drill = drills.find((entry) => entry.id === item.dataset.drillId);
-      paintButton(item, drill, item.querySelector("button"));
+      paintButton(item, drill, item.querySelector(".drill-action"));
     });
   }
 
@@ -216,8 +269,7 @@
     }
 
     if (attempt && attempt.state === "miss") {
-      const answer =
-        attempt.kind === "pick" ? "The answer is shown." : "Good spots are shown.";
+      const answer = view && view.spotLine ? view.spotLine : "";
       statusEl.textContent = answer;
       pitchEl.setAttribute("aria-label", "Top-down soccer pitch. " + answer);
       return;
@@ -506,6 +558,21 @@
   }
 
   listEl.addEventListener("click", (event) => {
+    const more = event.target.closest("button[data-action='more']");
+    if (more) {
+      const item = more.closest("[data-drill-id]");
+      const explainer = item.querySelector(".drill-explainer");
+      const open = explainer.hidden;
+      explainer.hidden = !open;
+      more.setAttribute("aria-expanded", open ? "true" : "false");
+      more.textContent = open ? "Less" : "More";
+      const drillName = item.querySelector(".drill-name").textContent;
+      more.setAttribute(
+        "aria-label",
+        (open ? "Less about " : "More about ") + drillName
+      );
+      return;
+    }
     const button = event.target.closest("button[data-action='start']");
     if (!button) return;
     const item = button.closest("[data-drill-id]");
@@ -552,8 +619,48 @@
     });
   }
 
+  const helpButton = document.querySelector("#game-help");
+  const helpPanel = document.querySelector("#game-help-panel");
+
+  function helpIsOpen() {
+    return Boolean(helpPanel && helpPanel.open);
+  }
+
+  function openHelp() {
+    if (!helpButton || !helpPanel || helpIsOpen()) return;
+    helpButton.setAttribute("aria-expanded", "true");
+    helpPanel.showModal();
+  }
+
+  function closeHelp() {
+    if (!helpPanel || !helpIsOpen()) return;
+    helpPanel.close();
+  }
+
+  if (helpButton && helpPanel) {
+    helpButton.addEventListener("click", () => {
+      if (helpIsOpen()) closeHelp();
+      else openHelp();
+    });
+    helpPanel.addEventListener("close", () => {
+      helpButton.setAttribute("aria-expanded", "false");
+    });
+    helpPanel.addEventListener("click", (event) => {
+      if (event.target === helpPanel || event.target.closest("[data-action='close-help']")) {
+        closeHelp();
+      }
+    });
+  }
+
   renderList();
   paintLevels();
-  renderStatus();
-  renderPoints();
+  const opening = drills.find((drill) => drill.id === "triangle");
+  startDrill(opening);
+  if (!currentId) {
+    renderStatus();
+    renderPoints();
+  }
+  if (globalThis.StarterScenes && typeof globalThis.StarterScenes.redraw === "function") {
+    globalThis.StarterScenes.redraw();
+  }
 })();
