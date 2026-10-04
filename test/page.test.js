@@ -15,6 +15,19 @@ test("the playable page is index.html at the repository root", () => {
   assert.match(html, /Top-down soccer pitch/);
   assert.match(html, /href="css\/game\.css"/);
   assert.match(html, /src="js\/catalog\.js"/);
+  assert.match(html, /src="js\/attempt\.js"/);
   assert.match(html, /src="js\/game\.js"/);
+  assert.ok(
+    html.indexOf('src="js/catalog.js"') < html.indexOf('src="js/attempt.js"') &&
+      html.indexOf('src="js/attempt.js"') < html.indexOf('src="js/game.js"')
+  );
   assert.doesNotMatch(html, /dist\//);
+});
+
+test("the page renders a drag attempt and does not judge spots", () => {
+  const game = fs.readFileSync(path.join(root, "js", "game.js"), "utf8");
+  assert.match(game, /presentation\(/);
+  assert.doesNotMatch(game, /goodSpots/);
+  assert.doesNotMatch(game, /better|worse|Math\.hypot/);
+  assert.doesNotMatch(game, /\b(pass|fail)\b/i);
 });

@@ -1,9 +1,11 @@
 (function () {
   const api = globalThis.SoccerStrategy;
+  const attemptApi = globalThis.SoccerAttempt;
   const drills = api.drills;
   const listEl = document.querySelector("#drill-list");
   const statusEl = document.querySelector("#play-status");
   const pitchEl = document.querySelector("#pitch");
+  const svgNS = "http://www.w3.org/2000/svg";
 
   const tiers = [
     {
@@ -24,6 +26,8 @@
   ];
 
   let currentId = null;
+  let attempt = null;
+  let drag = null;
 
   function kindLabel(kind) {
     return kind === "drag" ? "Drag" : "Pick";
@@ -119,11 +123,34 @@
 
   function renderStatus() {
     const current = drills.find((drill) => drill.id === currentId) || null;
+    const view = attempt ? attemptApi.presentation(attempt) : null;
+    statusEl.dataset.state = attempt ? attempt.state : "";
+    pitchEl.setAttribute("role", attempt ? "group" : "img");
+
     if (!current) {
       statusEl.textContent = "The pitch is ready. Start a starter drill.";
       pitchEl.setAttribute("aria-label", "Top-down soccer pitch");
       return;
     }
+
+    if (view && view.confirmation) {
+      statusEl.textContent = view.confirmation;
+      pitchEl.setAttribute(
+        "aria-label",
+        "Top-down soccer pitch. " + view.confirmation
+      );
+      return;
+    }
+
+    if (attempt && attempt.state === "miss") {
+      statusEl.textContent = "Good spots are shown.";
+      pitchEl.setAttribute(
+        "aria-label",
+        "Top-down soccer pitch. Good spots are shown."
+      );
+      return;
+    }
+
     statusEl.textContent = "Playing " + current.name + ".";
     pitchEl.setAttribute(
       "aria-label",
@@ -131,11 +158,131 @@
     );
   }
 
+  function svgEl(name, attrs) {
+    const el = document.createElementNS(svgNS, name);
+    Object.keys(attrs).forEach((key) => {
+      el.setAttribute(key, String(attrs[key]));
+    });
+    return el;
+  }
+
+  function pitchPoint(event) {
+    const matrix = pitchEl.getScreenCTM();
+    if (!matrix) return null;
+    const point = pitchEl.createSVGPoint();
+    point.x = event.clientX;
+    point.y = event.clientY;
+    const local = point.matrixTransform(matrix.inverse());
+    return { x: local.x, y: local.y };
+  }
+
+  function paintSpot(spot) {
+    const mark = svgEl("circle", {
+      class: "correction-spot",
+      cx: spot.x,
+      cy: spot.y,
+      r: spot.r,
+      "data-correction": "true",
+    });
+    const title = document.createElementNS(svgNS, "title");
+    title.textContent = "Good spot";
+    mark.append(title);
+    return mark;
+  }
+
+  function movePiece(piece, point) {
+    piece.setAttribute("transform", "translate(" + point.x + " " + point.y + ")");
+  }
+
+  function onPointerDown(event) {
+    const view = attempt ? attemptApi.presentation(attempt) : null;
+    if (!view || !view.draggable) return;
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    drag = { pointerId: event.pointerId, attempt };
+    event.currentTarget.classList.add("is-dragging");
+  }
+
+  function onPointerMove(event) {
+    if (!drag || drag.pointerId !== event.pointerId || drag.attempt !== attempt) {
+      return;
+    }
+    const view = attemptApi.presentation(attempt);
+    if (!view.draggable) return;
+    const point = pitchPoint(event);
+    if (!point) return;
+    movePiece(event.currentTarget, point);
+  }
+
+  function onPointerCancel(event) {
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    drag = null;
+    renderAttempt();
+  }
+
+  function onPointerUp(event) {
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    const started = drag.attempt;
+    drag = null;
+    if (started !== attempt) return;
+    const view = attemptApi.presentation(started);
+    if (!view.draggable) return;
+    const point = pitchPoint(event);
+    if (!point) return;
+    // drop reveals a miss answer before it marks the attempt over.
+    attempt = attemptApi.drop(started, point);
+    renderAttempt();
+    renderStatus();
+  }
+
+  function paintToken(token, draggable) {
+    const piece = svgEl("g", {
+      id: "drag-token",
+      class: "drag-piece",
+      "data-draggable": draggable ? "true" : "false",
+    });
+    movePiece(piece, token);
+    piece.append(
+      svgEl("circle", { class: "drag-hit", cx: 0, cy: 0, r: 44 }),
+      svgEl("circle", { class: "drag-token", cx: 0, cy: 0, r: 28 })
+    );
+    if (draggable) {
+      piece.setAttribute("role", "button");
+      piece.setAttribute("aria-label", "Drag to a spot");
+      piece.addEventListener("pointerdown", onPointerDown);
+      piece.addEventListener("pointermove", onPointerMove);
+      piece.addEventListener("pointerup", onPointerUp);
+      piece.addEventListener("pointercancel", onPointerCancel);
+    } else {
+      piece.setAttribute("aria-hidden", "true");
+    }
+    return piece;
+  }
+
+  function renderAttempt() {
+    const existing = pitchEl.querySelector("#attempt-layer");
+    if (!attempt) {
+      if (existing) existing.remove();
+      return;
+    }
+
+    const layer = existing || svgEl("g", { id: "attempt-layer" });
+    if (!existing) pitchEl.append(layer);
+    layer.replaceChildren();
+
+    const view = attemptApi.presentation(attempt);
+    view.correctionSpots.forEach((spot) => {
+      layer.append(paintSpot(spot));
+    });
+    layer.append(paintToken(attempt.token, view.draggable));
+  }
+
   function sync() {
     listEl.querySelectorAll(".drill").forEach((item) => {
       const drill = drills.find((entry) => entry.id === item.dataset.drillId);
       paintButton(item, drill, item.querySelector("button"));
     });
+    renderAttempt();
     renderStatus();
   }
 
@@ -146,6 +293,8 @@
     const drill = drills.find((entry) => entry.id === item.dataset.drillId);
     if (!drill || !api.canStart(drill)) return;
     currentId = drill.id;
+    drag = null;
+    attempt = drill.kind === "drag" ? attemptApi.createAttempt(drill) : null;
     sync();
   });
 
