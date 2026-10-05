@@ -48,17 +48,28 @@
     return mark;
   }
 
-  function paintToken(token, draggable, onPointerDown, onPointerMove, onPointerUp, onPointerCancel) {
+  function paintToken(
+    token,
+    draggable,
+    onPointerDown,
+    onPointerMove,
+    onPointerUp,
+    onPointerCancel,
+    coverMarks
+  ) {
+    if (coverMarks !== false) coverMarks = true;
     const piece = svgEl("g", {
       id: "drag-token",
       class: "drag-piece",
       "data-draggable": draggable ? "true" : "false",
     });
     piece.setAttribute("transform", "translate(" + token.x + " " + token.y + ")");
-    piece.append(
-      svgEl("circle", { class: "drag-hit", cx: 0, cy: 0, r: 44 }),
-      svgEl("circle", { class: "drag-token", cx: 0, cy: 0, r: 28 })
-    );
+    // Other Level 1 drills keep the 44px cover over a nearby mark.
+    // Only Goalkeeper step-out Level 1 lets Central take the click.
+    if (draggable || coverMarks) {
+      piece.append(svgEl("circle", { class: "drag-hit", cx: 0, cy: 0, r: 44 }));
+    }
+    piece.append(svgEl("circle", { class: "drag-token", cx: 0, cy: 0, r: 28 }));
     if (draggable) {
       piece.setAttribute("role", "button");
       piece.setAttribute("aria-label", "Drag to a spot");
@@ -68,6 +79,7 @@
       piece.addEventListener("pointercancel", onPointerCancel);
     } else {
       piece.setAttribute("aria-hidden", "true");
+      if (!coverMarks) piece.setAttribute("pointer-events", "none");
     }
     return piece;
   }

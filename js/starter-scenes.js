@@ -959,7 +959,10 @@
           button.type = "button";
           button.dataset.angle = angle.id;
           button.textContent = angle.label;
-          button.addEventListener("click", function () {
+          button.addEventListener("click", function (event) {
+            if (event && typeof event.stopPropagation === "function") {
+              event.stopPropagation();
+            }
             selectAngle(angle.id);
           });
           bar.append(button);

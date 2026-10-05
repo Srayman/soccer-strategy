@@ -297,6 +297,7 @@ function loadGame(document) {
     drills: drills,
     isLocked: catalog.isLocked,
     canStart: catalog.canStart,
+    goalkeeperDrillId: catalog.goalkeeperDrillId,
   };
   globalThis.SoccerAttempt = require("../js/attempt.js");
   globalThis.SoccerPoints = require("../js/points.js");
