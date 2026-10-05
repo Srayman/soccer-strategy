@@ -474,6 +474,104 @@ test("level 2 keeps every goalkeeper picture selectable without scoring", () => 
   }
 });
 
+function sceneLayer(document) {
+  return document.pitch.querySelector("#starter-scene-layer");
+}
+
+function ballAt(layer) {
+  const ball = layer.querySelector("[data-ball='true']");
+  return ball ? ball.getAttribute("transform") : "";
+}
+
+function countSceneDraws(layer, run) {
+  let draws = 0;
+  const original = layer.replaceChildren;
+  layer.replaceChildren = (...nodes) => {
+    draws += 1;
+    return original.apply(layer, nodes);
+  };
+  try {
+    run();
+    return draws;
+  } finally {
+    layer.replaceChildren = original;
+  }
+}
+
+test("a click that does not change the scene does not redraw it", () => {
+  const page = boot();
+  try {
+    startDrill(page.document, keeper.id);
+    assertPicturesOpen(page.document, 1);
+    const layer = sceneLayer(page.document);
+    const before = ballAt(layer);
+    const actors = layer.children.length;
+    const draws = countSceneDraws(layer, () => {
+      page.document.dispatchEvent({ type: "click" });
+      page.document.dispatchEvent({ type: "click" });
+    });
+    assert.equal(draws, 0);
+    assert.equal(ballAt(layer), before);
+    assert.equal(layer.children.length, actors);
+    assert.equal(page.document.nodes["#points"].textContent, "Score: 0");
+    assert.equal(
+      pictureButtons(page.document).find((el) => el.dataset.angle === "central").getAttribute(
+        "aria-pressed"
+      ),
+      "true"
+    );
+  } finally {
+    page.restore();
+  }
+});
+
+test("a click that changes the scene still redraws", () => {
+  const page = boot();
+  try {
+    startDrill(page.document, keeper.id);
+    const layer = sceneLayer(page.document);
+    const keeperBall = ballAt(layer);
+    const draws = countSceneDraws(layer, () => {
+      startDrill(page.document, "open-body");
+    });
+    assert.ok(draws >= 1);
+    const next = sceneLayer(page.document);
+    assert.notEqual(ballAt(next), keeperBall);
+    assert.equal(page.document.nodes["#points"].textContent, "Score: 0");
+    const open = page.document.nodes["#drill-list"]
+      .querySelectorAll(".drill")
+      .find((item) => item.dataset.drillId === "open-body");
+    assert.equal(open.className.includes("is-playing"), true);
+    assert.equal(page.document.getElementById("starter-angles").hidden, true);
+  } finally {
+    page.restore();
+  }
+});
+
+test("switching a goalkeeper picture still redraws and does not score", () => {
+  const page = boot();
+  try {
+    startDrill(page.document, keeper.id);
+    const layer = sceneLayer(page.document);
+    const centralBall = ballAt(layer);
+    const draws = countSceneDraws(layer, () => {
+      clickPicture(page.document, "near-post");
+    });
+    assert.ok(draws >= 1);
+    assert.notEqual(ballAt(sceneLayer(page.document)), centralBall);
+    assertPicturesOpen(page.document, 1);
+    assert.equal(
+      pictureButtons(page.document).find((el) => el.dataset.angle === "near-post").getAttribute(
+        "aria-pressed"
+      ),
+      "true"
+    );
+    assert.equal(page.document.nodes["#points"].textContent, "Score: 0");
+  } finally {
+    page.restore();
+  }
+});
+
 test("check away level 1 keeps an overlapping mark under the learner token", () => {
   const page = boot();
   try {

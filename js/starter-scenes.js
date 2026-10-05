@@ -989,6 +989,25 @@
       draw();
     }
 
+    let drawnStamp = "";
+
+    function sceneStamp() {
+      const item = document.querySelector(".drill.is-playing");
+      const pressed = document.querySelector("#play-level button[aria-pressed='true']");
+      const token = document.querySelector("#drag-token");
+      return [
+        item ? item.dataset.drillId : "",
+        angleId,
+        pressed && Number(pressed.dataset.level) === 2 ? "2" : "1",
+        statusEl.dataset.state || "",
+        token ? "1" : "0",
+      ].join(":");
+    }
+
+    function sceneNeedsDraw() {
+      return sceneStamp() !== drawnStamp;
+    }
+
     function draw() {
       const caption = slot("starter-caption", "starter-caption");
       const scene = currentScene();
@@ -998,6 +1017,7 @@
       if (!scene) {
         caption.hidden = true;
         caption.textContent = "";
+        drawnStamp = sceneStamp();
         return;
       }
       const frame = frameFor(scene);
@@ -1046,11 +1066,13 @@
       }
       if (frame.ball) drawBall(layer, frame.ball, actors);
       decorateToken();
+      drawnStamp = sceneStamp();
     }
 
     paintScene = draw;
 
     document.addEventListener("click", function () {
+      if (!sceneNeedsDraw()) return;
       draw();
     });
 
