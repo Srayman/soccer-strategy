@@ -407,6 +407,17 @@ test("the third goalkeeper picture control stays in reach while playing", () => 
   assert.match(compact, /\.starter-angles\s*\{[^}]*flex-wrap:\s*nowrap/);
 });
 
+test("a document click redraws the scene only when the scene needs it", () => {
+  const source = fs.readFileSync(path.join(__dirname, "..", "js", "starter-scenes.js"), "utf8");
+  const start = source.lastIndexOf('document.addEventListener("click"');
+  const end = source.indexOf("new MutationObserver", start);
+  const click = source.slice(start, end);
+  assert.match(click, /sceneNeedsDraw/);
+  assert.doesNotMatch(click, /function \(\) \{\s*draw\(\);\s*\}/);
+  assert.match(source, /function sceneStamp\(/);
+  assert.match(source, /function sceneNeedsDraw\(/);
+});
+
 test("check away picks the move into open space", () => {
   const scene = byId["check-away"];
   const away = named(scene.targets, "away");
