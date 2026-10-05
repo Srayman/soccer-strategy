@@ -2,14 +2,18 @@
 // one attempt has ended on each picture. One ended attempt does not
 // clear it. A picture switch before the drag is not an ended attempt.
 (function (root, factory) {
-  const api = factory();
+  const api = factory(root);
   if (typeof module === "object" && module.exports) {
     module.exports = api;
   } else {
     root.SoccerClear = api;
   }
-})(typeof globalThis !== "undefined" ? globalThis : this, function () {
-  const drillId = "goalkeeper-step-out-and-line-up";
+})(typeof globalThis !== "undefined" ? globalThis : this, function (root) {
+  const catalog =
+    root.SoccerStrategy && root.SoccerStrategy.goalkeeperDrillId
+      ? root.SoccerStrategy
+      : require("./catalog.js");
+  const drillId = catalog.goalkeeperDrillId;
   const pictures = Object.freeze(["central", "near-post", "through-ball"]);
 
   function createClearance() {

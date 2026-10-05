@@ -1,6 +1,10 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { drills, isLocked, canStart } = require("../js/catalog.js");
+const fs = require("node:fs");
+const path = require("node:path");
+const { drills, isLocked, canStart, goalkeeperDrillId } = require("../js/catalog.js");
+
+const root = path.join(__dirname, "..");
 
 const expected = [
   ["starter", "drag", "Open body"],
@@ -68,14 +72,26 @@ test("catalog counts match the plan tiers", () => {
 test("ids are unique and stable", () => {
   const ids = drills.map((drill) => drill.id);
   assert.equal(new Set(ids).size, ids.length);
+  assert.equal(goalkeeperDrillId, "goalkeeper-step-out-and-line-up");
   assert.equal(
     drills.find((drill) => drill.name === "Goalkeeper step-out and line-up").id,
-    "goalkeeper-step-out-and-line-up"
+    goalkeeperDrillId
   );
   assert.equal(
     drills.find((drill) => drill.name === "Offside line step or drop").id,
     "offside-line-step-or-drop"
   );
+});
+
+test("points and clear use the catalog goalkeeper drill id", () => {
+  const catalog = fs.readFileSync(path.join(root, "js", "catalog.js"), "utf8");
+  const points = fs.readFileSync(path.join(root, "js", "points.js"), "utf8");
+  const clear = fs.readFileSync(path.join(root, "js", "clear.js"), "utf8");
+  assert.match(catalog, /goalkeeperDrillId/);
+  assert.match(points, /goalkeeperDrillId/);
+  assert.match(clear, /goalkeeperDrillId/);
+  assert.doesNotMatch(points, /["']goalkeeper-step-out-and-line-up["']/);
+  assert.doesNotMatch(clear, /["']goalkeeper-step-out-and-line-up["']/);
 });
 
 test("only starters can be started", () => {
