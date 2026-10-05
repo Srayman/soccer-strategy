@@ -197,6 +197,7 @@ function boot(list) {
     drills: list,
     isLocked: catalog.isLocked,
     canStart: catalog.canStart,
+    goalkeeperDrillId: catalog.goalkeeperDrillId,
   };
   globalThis.SoccerAttempt = require("../js/attempt.js");
   globalThis.SoccerPoints = {

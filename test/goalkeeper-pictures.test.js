@@ -1,8 +1,9 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { drills } = require("../js/catalog.js");
+const { drills, goalkeeperDrillId } = require("../js/catalog.js");
 
-const keeper = drills.find((drill) => drill.id === "goalkeeper-step-out-and-line-up");
+const keeper = drills.find((drill) => drill.id === goalkeeperDrillId);
+const checkAway = drills.find((drill) => drill.id === "check-away");
 const pictures = [
   { id: "central", label: "Central" },
   { id: "near-post", label: "Near post" },
@@ -303,6 +304,7 @@ function loadGame(document) {
     drills: drills,
     isLocked: catalog.isLocked,
     canStart: catalog.canStart,
+    goalkeeperDrillId: catalog.goalkeeperDrillId,
   };
   globalThis.SoccerAttempt = require("../js/attempt.js");
   globalThis.SoccerPoints = require("../js/points.js");
@@ -467,6 +469,31 @@ test("level 2 keeps every goalkeeper picture selectable without scoring", () => 
     assertPicturesOpen(page.document, 2);
     assert.equal(page.document.nodes["#points"].textContent, "Score: 0");
     assert.equal(page.document.pitch.querySelectorAll(".marked-target").length, 0);
+  } finally {
+    page.restore();
+  }
+});
+
+test("check away level 1 keeps an overlapping mark under the learner token", () => {
+  const page = boot();
+  try {
+    startDrill(page.document, checkAway.id);
+    const layer = page.document.pitch.querySelector("#attempt-layer");
+    const token = layer.querySelector("#drag-token");
+    const still = layer
+      .querySelectorAll(".marked-target")
+      .find((mark) => mark.getAttribute("data-target-id") === "a");
+    assert.ok(token, "learner token");
+    assert.ok(still, "still mark");
+    assert.equal(token.getAttribute("data-draggable"), "false");
+    assert.ok(token.querySelector(".drag-hit"), "old 44px hit cover");
+    assert.equal(token.getAttribute("pointer-events"), null);
+    assert.ok(
+      layer.children.indexOf(token) > layer.children.indexOf(still),
+      "token stays above the overlapping mark"
+    );
+    assert.equal(page.document.nodes["#points"].textContent, "Score: 0");
+    assert.equal(page.document.nodes["#play-status"].dataset.state, "playing");
   } finally {
     page.restore();
   }

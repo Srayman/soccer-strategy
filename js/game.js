@@ -487,7 +487,25 @@
     layer.replaceChildren();
 
     const view = attemptApi.presentation(attempt);
-    if (attempt.token) {
+    // Level 2 sends visibleTargets so the good spot and wrong choices stay undrawn.
+    // Only Goalkeeper step-out Level 1 paints marks after You so Central is clickable.
+    const coverMarks =
+      currentId !== api.goalkeeperDrillId || Boolean(view.draggable);
+    const painted = view.visibleTargets || view.targets;
+
+    function appendMarks() {
+      if (painted) {
+        painted.forEach((target) => {
+          layer.append(renderApi.paintTarget(target, view.pickable, onPick, onPickKey));
+        });
+      }
+      view.correctionSpots.forEach((spot) => {
+        layer.append(paintSpot(spot));
+      });
+    }
+
+    function appendYou() {
+      if (!attempt.token) return;
       layer.append(
         renderApi.paintToken(
           attempt.token,
@@ -495,21 +513,19 @@
           onPointerDown,
           onPointerMove,
           onPointerUp,
-          onPointerCancel
+          onPointerCancel,
+          coverMarks
         )
       );
     }
-    // Level 2 sends visibleTargets so the good spot and wrong choices stay undrawn.
-    // Marks paint after the token so a Level 1 Central pick is not covered.
-    const painted = view.visibleTargets || view.targets;
-    if (painted) {
-      painted.forEach((target) => {
-        layer.append(renderApi.paintTarget(target, view.pickable, onPick, onPickKey));
-      });
+
+    if (coverMarks) {
+      appendMarks();
+      appendYou();
+    } else {
+      appendYou();
+      appendMarks();
     }
-    view.correctionSpots.forEach((spot) => {
-      layer.append(paintSpot(spot));
-    });
     const motion = nextPlayApi.animationFor(attempt);
     if (motion) layer.append(renderApi.paintMotion(motion));
     if (mark) layer.append(renderApi.paintCelebration(mark));
