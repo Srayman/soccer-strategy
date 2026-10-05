@@ -11,18 +11,18 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function (root) {
   const spareIds = ["a", "c", "d", "e", "f", "g"];
 
+  // Script tags set these globals. Node require fills a missing one.
+  // Both hosts then read the same global.
+  function load(name, rel) {
+    if (!root[name]) root[name] = require(rel);
+    return root[name];
+  }
+
   function sources() {
-    if (root.SoccerNextScenes && root.SoccerAdvancedScenes && root.StarterScenes) {
-      return {
-        next: root.SoccerNextScenes,
-        advanced: root.SoccerAdvancedScenes,
-        scale: root.StarterScenes.pitch.scale,
-      };
-    }
     return {
-      next: require("./scenes/next.js"),
-      advanced: require("./scenes/advanced.js"),
-      scale: require("./starter-scenes.js").pitch.scale,
+      next: load("SoccerNextScenes", "./scenes/next.js"),
+      advanced: load("SoccerAdvancedScenes", "./scenes/advanced.js"),
+      scale: load("StarterScenes", "./starter-scenes.js").pitch.scale,
     };
   }
 
