@@ -286,6 +286,7 @@ function loadGame(document) {
     next: globalThis.SoccerNextPlay,
     celebrate: globalThis.SoccerCelebrate,
     progress: globalThis.SoccerProgressCopy,
+    render: globalThis.SoccerRender,
     scenes: globalThis.StarterScenes,
     lines: globalThis.SoccerSpotLines,
     play: globalThis.SoccerScenePlay,
@@ -303,6 +304,7 @@ function loadGame(document) {
   globalThis.SoccerNextPlay = require("../js/next-play.js");
   globalThis.SoccerCelebrate = require("../js/celebrate.js");
   globalThis.SoccerProgressCopy = require("../js/progress-copy.js");
+  globalThis.SoccerRender = require("../js/render.js");
   globalThis.SoccerSpotLines = require("../js/spot-lines.js");
   globalThis.SoccerScenePlay = require("../js/scene-play.js");
   const scenePath = require.resolve("../js/starter-scenes.js");
@@ -326,6 +328,7 @@ function loadGame(document) {
       globalThis.SoccerNextPlay = previous.next;
       globalThis.SoccerCelebrate = previous.celebrate;
       globalThis.SoccerProgressCopy = previous.progress;
+      globalThis.SoccerRender = previous.render;
       globalThis.StarterScenes = previous.scenes;
       globalThis.SoccerSpotLines = previous.lines;
       globalThis.SoccerScenePlay = previous.play;

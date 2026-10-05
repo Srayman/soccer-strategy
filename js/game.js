@@ -6,6 +6,7 @@
   const nextPlayApi = globalThis.SoccerNextPlay;
   const celebrateApi = globalThis.SoccerCelebrate;
   const progressCopy = globalThis.SoccerProgressCopy;
+  const renderApi = globalThis.SoccerRender;
   const drills = api.drills;
   const listEl = document.querySelector("#drill-list");
   const statusEl = document.querySelector("#play-status");
@@ -286,14 +287,6 @@
     pitchEl.setAttribute("aria-label", "Top-down soccer pitch. " + current.idea);
   }
 
-  function svgEl(name, attrs) {
-    const el = document.createElementNS(svgNS, name);
-    Object.keys(attrs).forEach((key) => {
-      el.setAttribute(key, String(attrs[key]));
-    });
-    return el;
-  }
-
   // Field corners in the pitch picture. 680 by 1050 is the playing surface.
   const pitchCornerPoints = [
     { x: 0, y: 0 },
@@ -308,7 +301,7 @@
   function pitchCorners() {
     let layer = pitchEl.querySelector("#pitch-corners");
     if (layer) return layer;
-    layer = svgEl("g", {
+    layer = renderApi.svgEl("g", {
       id: "pitch-corners",
       opacity: "0",
       "pointer-events": "none",
@@ -316,7 +309,7 @@
     });
     pitchCornerPoints.forEach((corner) => {
       layer.append(
-        svgEl("circle", {
+        renderApi.svgEl("circle", {
           class: "pitch-corner",
           cx: corner.x,
           cy: corner.y,
@@ -395,7 +388,7 @@
   }
 
   function paintSpot(spot) {
-    const mark = svgEl("circle", {
+    const mark = renderApi.svgEl("circle", {
       class: "correction-spot",
       cx: spot.x,
       cy: spot.y,
@@ -433,35 +426,6 @@
     if (event.key !== "Enter" && event.key !== " ") return;
     event.preventDefault();
     chooseTarget(event.currentTarget);
-  }
-
-  function paintTarget(target, pickable) {
-    const mark = svgEl("g", {
-      class: "marked-target",
-      "data-target-id": target.id,
-      "data-pickable": pickable ? "true" : "false",
-    });
-    mark.append(
-      svgEl("circle", {
-        class: "marked-target-spot",
-        cx: target.x,
-        cy: target.y,
-        r: target.r,
-      })
-    );
-    const title = document.createElementNS(svgNS, "title");
-    title.textContent = "Marked target";
-    mark.append(title);
-    if (pickable) {
-      mark.setAttribute("role", "button");
-      mark.setAttribute("tabindex", "0");
-      mark.setAttribute("aria-label", "Choose this marked target");
-      mark.addEventListener("click", onPick);
-      mark.addEventListener("keydown", onPickKey);
-    } else {
-      mark.setAttribute("aria-hidden", "true");
-    }
-    return mark;
   }
 
   function onPointerDown(event) {
@@ -507,114 +471,6 @@
     renderStatus();
   }
 
-  function paintToken(token, draggable) {
-    const piece = svgEl("g", {
-      id: "drag-token",
-      class: "drag-piece",
-      "data-draggable": draggable ? "true" : "false",
-    });
-    movePiece(piece, token);
-    piece.append(
-      svgEl("circle", { class: "drag-hit", cx: 0, cy: 0, r: 44 }),
-      svgEl("circle", { class: "drag-token", cx: 0, cy: 0, r: 28 })
-    );
-    if (draggable) {
-      piece.setAttribute("role", "button");
-      piece.setAttribute("aria-label", "Drag to a spot");
-      piece.addEventListener("pointerdown", onPointerDown);
-      piece.addEventListener("pointermove", onPointerMove);
-      piece.addEventListener("pointerup", onPointerUp);
-      piece.addEventListener("pointercancel", onPointerCancel);
-    } else {
-      piece.setAttribute("aria-hidden", "true");
-    }
-    return piece;
-  }
-
-  function paintMotion(motion) {
-    const start = motion.frames[0];
-    const end = motion.frames[motion.frames.length - 1];
-    const group = svgEl("g", {
-      id: "next-moment",
-      class: "next-moment",
-      "data-animation": motion.id,
-    });
-    const runner = svgEl("circle", {
-      class: "next-moment-runner",
-      cx: start.x,
-      cy: start.y,
-      r: 16,
-    });
-    const dx = end.x - start.x;
-    const dy = end.y - start.y;
-    runner.append(
-      svgEl("animateMotion", {
-        dur: motion.durationMs + "ms",
-        repeatCount: motion.repeatCount,
-        fill: "freeze",
-        begin: "0s",
-        path: "M 0 0 L " + dx + " " + dy,
-      })
-    );
-    const title = document.createElementNS(svgNS, "title");
-    title.textContent = "Next moment";
-    group.append(title, runner);
-    return group;
-  }
-
-  function paintCelebration(mark) {
-    const group = svgEl("g", {
-      id: "spot-celebration",
-      class: "spot-celebration",
-      "data-celebration": "correct",
-      "aria-hidden": "true",
-    });
-
-    function placed(className, point, child) {
-      const wrap = svgEl("g", {
-        transform: "translate(" + point.x + " " + point.y + ")",
-      });
-      const spin = svgEl("g", { class: className });
-      if (point.delayMs) spin.style.animationDelay = point.delayMs + "ms";
-      spin.append(child);
-      wrap.append(spin);
-      group.append(wrap);
-    }
-
-    placed(
-      "burst-disc",
-      mark.disc,
-      svgEl("circle", {
-        class: "burst-disc-shape",
-        cx: 0,
-        cy: 0,
-        r: mark.disc.r,
-      })
-    );
-    placed(
-      "burst-ring",
-      mark.ring,
-      svgEl("circle", {
-        class: "burst-ring-shape",
-        cx: 0,
-        cy: 0,
-        r: mark.ring.r,
-      })
-    );
-    mark.stars.forEach((star) => {
-      placed(
-        "burst-star",
-        star,
-        svgEl("polygon", {
-          class: "burst-star-shape",
-          points: mark.shapes[star.shape],
-          fill: star.fill,
-        })
-      );
-    });
-    return group;
-  }
-
   function renderAttempt() {
     const frame = pitchEl.closest(".pitch-frame");
     const mark = attempt ? celebrateApi.celebrationFor(attempt) : null;
@@ -626,7 +482,7 @@
       return;
     }
 
-    const layer = existing || svgEl("g", { id: "attempt-layer" });
+    const layer = existing || renderApi.svgEl("g", { id: "attempt-layer" });
     if (!existing) pitchEl.append(layer);
     layer.replaceChildren();
 
@@ -635,18 +491,27 @@
     const painted = view.visibleTargets || view.targets;
     if (painted) {
       painted.forEach((target) => {
-        layer.append(paintTarget(target, view.pickable));
+        layer.append(renderApi.paintTarget(target, view.pickable, onPick, onPickKey));
       });
     }
     view.correctionSpots.forEach((spot) => {
       layer.append(paintSpot(spot));
     });
     if (attempt.token) {
-      layer.append(paintToken(attempt.token, view.draggable));
+      layer.append(
+        renderApi.paintToken(
+          attempt.token,
+          view.draggable,
+          onPointerDown,
+          onPointerMove,
+          onPointerUp,
+          onPointerCancel
+        )
+      );
     }
     const motion = nextPlayApi.animationFor(attempt);
-    if (motion) layer.append(paintMotion(motion));
-    if (mark) layer.append(paintCelebration(mark));
+    if (motion) layer.append(renderApi.paintMotion(motion));
+    if (mark) layer.append(renderApi.paintCelebration(mark));
   }
 
   function sync() {

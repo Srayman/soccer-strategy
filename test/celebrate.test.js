@@ -123,14 +123,19 @@ test("the page celebrates from the correct ending and leaves the rest of play", 
   const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
   const css = fs.readFileSync(path.join(root, "css", "game.css"), "utf8");
   const scenes = fs.readFileSync(path.join(root, "js", "starter-scenes.js"), "utf8");
+  const render = fs.readFileSync(path.join(root, "js", "render.js"), "utf8");
 
   assert.match(html, /src="js\/celebrate\.js"/);
+  assert.match(html, /src="js\/render\.js"/);
   assert.ok(
     html.indexOf('src="js/next-play.js"') < html.indexOf('src="js/celebrate.js"') &&
       html.indexOf('src="js/celebrate.js"') < html.indexOf('src="js/game.js"')
   );
+  assert.ok(html.indexOf('src="js/render.js"') < html.indexOf('src="js/starter-scenes.js"'));
+  assert.ok(html.indexOf('src="js/render.js"') < html.indexOf('src="js/game.js"'));
   assert.match(game, /celebrationFor\(/);
-  assert.match(game, /id: "spot-celebration"/);
+  assert.match(game, /paintCelebration\(/);
+  assert.match(render, /id: "spot-celebration"/);
   assert.match(game, /is-celebrating/);
   assert.match(game, /view\.confirmation/);
   assert.match(game, /buttonEnabled\(/);
@@ -148,8 +153,9 @@ test("the page celebrates from the correct ending and leaves the rest of play", 
     scenes,
     /return Object\.freeze\(\{ x: spot\.x, y: spot\.y, r: spot\.r \* 2 \}\);/
   );
-  assert.match(game, /class: "drag-hit", cx: 0, cy: 0, r: 44/);
-  assert.match(game, /class: "drag-token", cx: 0, cy: 0, r: 28/);
+  assert.match(game, /paintToken\(/);
+  assert.match(render, /class: "drag-hit", cx: 0, cy: 0, r: 44/);
+  assert.match(render, /class: "drag-token", cx: 0, cy: 0, r: 28/);
 
   const panes = css.slice(css.indexOf("/* Fixed page unless"), css.indexOf(".spot-celebration"));
   assert.match(panes, /@media \(max-width: 800px\), \(max-height: 500px\)/);
