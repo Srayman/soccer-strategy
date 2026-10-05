@@ -294,14 +294,104 @@
     return el;
   }
 
-  function pitchPoint(event) {
+  // Field corners in the pitch picture. 680 by 1050 is the playing surface.
+  const pitchCornerPoints = [
+    { x: 0, y: 0 },
+    { x: 680, y: 0 },
+    { x: 0, y: 1050 },
+  ];
+
+  // A narrow window turns the pitch with CSS. The SVG screen matrix can
+  // leave that turn out, and a finger on the good spot then lands off the
+  // left of the pitch. Three painted corners still sit on the picture, so
+  // the drop uses the place where the pointer let go.
+  function pitchCorners() {
+    let layer = pitchEl.querySelector("#pitch-corners");
+    if (layer) return layer;
+    layer = svgEl("g", {
+      id: "pitch-corners",
+      opacity: "0",
+      "pointer-events": "none",
+      "aria-hidden": "true",
+    });
+    pitchCornerPoints.forEach((corner) => {
+      layer.append(
+        svgEl("circle", {
+          class: "pitch-corner",
+          cx: corner.x,
+          cy: corner.y,
+          r: 1,
+          "pointer-events": "none",
+        })
+      );
+    });
+    pitchEl.append(layer);
+    return layer;
+  }
+
+  function cornerClient(dot) {
+    if (!dot || typeof dot.getBoundingClientRect !== "function") return null;
+    const box = dot.getBoundingClientRect();
+    if (!box || !(box.width > 0) || !(box.height > 0)) return null;
+    return {
+      x: box.left + box.width / 2,
+      y: box.top + box.height / 2,
+    };
+  }
+
+  function pointFromCorners(clientX, clientY) {
+    const layer = pitchCorners();
+    const dots = layer.querySelectorAll(".pitch-corner");
+    if (!dots || dots.length < 3) return null;
+    const clients = [];
+    for (let i = 0; i < 3; i += 1) {
+      const client = cornerClient(dots[i]);
+      if (!client) return null;
+      clients.push(client);
+    }
+    const c0 = clients[0];
+    const c1 = clients[1];
+    const c2 = clients[2];
+    const denom =
+      (c1.y - c2.y) * (c0.x - c2.x) + (c2.x - c1.x) * (c0.y - c2.y);
+    if (!Number.isFinite(denom) || Math.abs(denom) < 0.001) return null;
+    const w0 =
+      ((c1.y - c2.y) * (clientX - c2.x) + (c2.x - c1.x) * (clientY - c2.y)) /
+      denom;
+    const w1 =
+      ((c2.y - c0.y) * (clientX - c2.x) + (c0.x - c2.x) * (clientY - c2.y)) /
+      denom;
+    const w2 = 1 - w0 - w1;
+    const x =
+      w0 * pitchCornerPoints[0].x +
+      w1 * pitchCornerPoints[1].x +
+      w2 * pitchCornerPoints[2].x;
+    const y =
+      w0 * pitchCornerPoints[0].y +
+      w1 * pitchCornerPoints[1].y +
+      w2 * pitchCornerPoints[2].y;
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+    return { x: x, y: y };
+  }
+
+  function pointFromScreenMatrix(event) {
+    if (typeof pitchEl.getScreenCTM !== "function") return null;
+    if (typeof pitchEl.createSVGPoint !== "function") return null;
     const matrix = pitchEl.getScreenCTM();
-    if (!matrix) return null;
+    if (!matrix || typeof matrix.inverse !== "function") return null;
     const point = pitchEl.createSVGPoint();
     point.x = event.clientX;
     point.y = event.clientY;
     const local = point.matrixTransform(matrix.inverse());
+    if (!local || !Number.isFinite(local.x) || !Number.isFinite(local.y)) return null;
     return { x: local.x, y: local.y };
+  }
+
+  function pitchPoint(event) {
+    if (!event || !Number.isFinite(event.clientX) || !Number.isFinite(event.clientY)) {
+      return null;
+    }
+    return pointFromCorners(event.clientX, event.clientY) || pointFromScreenMatrix(event);
   }
 
   function paintSpot(spot) {
