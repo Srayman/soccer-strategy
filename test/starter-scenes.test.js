@@ -409,10 +409,9 @@ test("the third goalkeeper picture control stays in reach while playing", () => 
 
 test("a document click redraws the scene only when the scene needs it", () => {
   const source = fs.readFileSync(path.join(__dirname, "..", "js", "starter-scenes.js"), "utf8");
-  const click = source.slice(
-    source.indexOf('document.addEventListener("click"'),
-    source.indexOf("const pitchEl = document.querySelector(\"#pitch\")")
-  );
+  const start = source.lastIndexOf('document.addEventListener("click"');
+  const end = source.indexOf("new MutationObserver", start);
+  const click = source.slice(start, end);
   assert.match(click, /sceneNeedsDraw/);
   assert.doesNotMatch(click, /function \(\) \{\s*draw\(\);\s*\}/);
   assert.match(source, /function sceneStamp\(/);
