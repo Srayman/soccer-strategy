@@ -38,6 +38,27 @@ test("the page renders a drag attempt and does not judge spots", () => {
   assert.doesNotMatch(game, /\b(pass|fail)\b/i);
 });
 
+test("svg painting helpers live in the render module", () => {
+  const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
+  const game = fs.readFileSync(path.join(root, "js", "game.js"), "utf8");
+  const scenes = fs.readFileSync(path.join(root, "js", "starter-scenes.js"), "utf8");
+  const render = fs.readFileSync(path.join(root, "js", "render.js"), "utf8");
+  const names = ["svgEl", "paintTarget", "paintToken", "paintCelebration", "paintMotion"];
+
+  assert.match(html, /src="js\/render\.js"/);
+  assert.ok(html.indexOf('src="js/render.js"') < html.indexOf('src="js/starter-scenes.js"'));
+  assert.ok(html.indexOf('src="js/starter-scenes.js"') < html.indexOf('src="js/game.js"'));
+  for (const name of names) {
+    assert.match(render, new RegExp("function " + name + "\\("));
+    assert.doesNotMatch(game, new RegExp("function " + name + "\\("));
+  }
+  const helper = scenes.slice(scenes.indexOf("function svgEl("), scenes.indexOf("function addTitle("));
+  assert.match(helper, /SoccerRender\.svgEl/);
+  assert.doesNotMatch(helper, /createElementNS/);
+  assert.match(game, /pointFromCorners\(event\.clientX, event\.clientY\)/);
+  assert.match(game, /id: "pitch-corners"/);
+});
+
 test("the page asks for one pick and does not judge the marked target", () => {
   const game = fs.readFileSync(path.join(root, "js", "game.js"), "utf8");
   assert.match(game, /createPickAttempt\(/);

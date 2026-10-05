@@ -786,11 +786,7 @@
     const statusEl = document.querySelector("#play-status");
 
     function svgEl(name, attrs) {
-      const el = document.createElementNS(svgNS, name);
-      Object.keys(attrs).forEach(function (key) {
-        el.setAttribute(key, String(attrs[key]));
-      });
-      return el;
+      return globalThis.SoccerRender.svgEl(name, attrs);
     }
 
     function addTitle(el, text) {

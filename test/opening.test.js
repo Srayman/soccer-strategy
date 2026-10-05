@@ -185,6 +185,7 @@ function boot(list) {
     next: globalThis.SoccerNextPlay,
     celebrate: globalThis.SoccerCelebrate,
     progress: globalThis.SoccerProgressCopy,
+    render: globalThis.SoccerRender,
     scenes: globalThis.StarterScenes,
   };
   const document = createDocument();
@@ -209,6 +210,7 @@ function boot(list) {
   globalThis.SoccerNextPlay = require("../js/next-play.js");
   globalThis.SoccerCelebrate = require("../js/celebrate.js");
   globalThis.SoccerProgressCopy = require("../js/progress-copy.js");
+  globalThis.SoccerRender = require("../js/render.js");
   globalThis.StarterScenes = require("../js/starter-scenes.js");
   const gamePath = require.resolve("../js/game.js");
   delete require.cache[gamePath];
@@ -227,6 +229,7 @@ function boot(list) {
       globalThis.SoccerNextPlay = previous.next;
       globalThis.SoccerCelebrate = previous.celebrate;
       globalThis.SoccerProgressCopy = previous.progress;
+      globalThis.SoccerRender = previous.render;
       globalThis.StarterScenes = previous.scenes;
     },
   };
