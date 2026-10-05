@@ -2,13 +2,13 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
-const { drills, canStart } = require("../js/catalog.js");
+const { drills, canStart, goalkeeperDrillId } = require("../js/catalog.js");
 const { createSession, settle } = require("../js/points.js");
 const { createClearance, noteEnded, isCleared, markEnded } = require("../js/clear.js");
 const scenes = require("../js/starter-scenes.js");
 
 const root = path.join(__dirname, "..");
-const keeper = drills.find((drill) => drill.id === "goalkeeper-step-out-and-line-up");
+const keeper = drills.find((drill) => drill.id === goalkeeperDrillId);
 const pictures = ["central", "near-post", "through-ball"];
 
 function installAttempt() {

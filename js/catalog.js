@@ -227,6 +227,8 @@
       .replace(/^-|-$/g, "");
   }
 
+  const goalkeeperDrillId = "goalkeeper-step-out-and-line-up";
+
   function drillsFor(tier, groups) {
     return ["drag", "pick"].flatMap((kind) =>
       groups[kind].map((name) =>
@@ -285,5 +287,6 @@
     drills,
     isLocked,
     canStart,
+    goalkeeperDrillId,
   });
 });

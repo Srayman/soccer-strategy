@@ -1,14 +1,18 @@
 // Points are a fun count added when an attempt ends.
 // A new page load starts again at zero.
 (function (root, factory) {
-  const api = factory();
+  const api = factory(root);
   if (typeof module === "object" && module.exports) {
     module.exports = api;
   } else {
     root.SoccerPoints = api;
   }
-})(typeof globalThis !== "undefined" ? globalThis : this, function () {
-  const goalkeeperId = "goalkeeper-step-out-and-line-up";
+})(typeof globalThis !== "undefined" ? globalThis : this, function (root) {
+  const catalog =
+    root.SoccerStrategy && root.SoccerStrategy.goalkeeperDrillId
+      ? root.SoccerStrategy
+      : require("./catalog.js");
+  const goalkeeperId = catalog.goalkeeperDrillId;
 
   function createSession() {
     return Object.freeze({
