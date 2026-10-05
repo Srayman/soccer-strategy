@@ -55,10 +55,12 @@
       "data-draggable": draggable ? "true" : "false",
     });
     piece.setAttribute("transform", "translate(" + token.x + " " + token.y + ")");
-    piece.append(
-      svgEl("circle", { class: "drag-hit", cx: 0, cy: 0, r: 44 }),
-      svgEl("circle", { class: "drag-token", cx: 0, cy: 0, r: 28 })
-    );
+    // Level 1 keeps the You token on the Central mark. A 44px hit
+    // circle would steal that pick. Only a drag needs the wide hit.
+    if (draggable) {
+      piece.append(svgEl("circle", { class: "drag-hit", cx: 0, cy: 0, r: 44 }));
+    }
+    piece.append(svgEl("circle", { class: "drag-token", cx: 0, cy: 0, r: 28 }));
     if (draggable) {
       piece.setAttribute("role", "button");
       piece.setAttribute("aria-label", "Drag to a spot");
@@ -68,6 +70,7 @@
       piece.addEventListener("pointercancel", onPointerCancel);
     } else {
       piece.setAttribute("aria-hidden", "true");
+      piece.setAttribute("pointer-events", "none");
     }
     return piece;
   }

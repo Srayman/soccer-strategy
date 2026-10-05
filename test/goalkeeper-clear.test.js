@@ -162,6 +162,13 @@ test("one ended attempt leaves the goalkeeper drill uncleared until each picture
   }
 });
 
+test("usePicture still selects Free ball after another picture and Central after that", () => {
+  assert.equal(scenes.usePicture("near-post"), "near-post");
+  assert.equal(scenes.usePicture("through-ball"), "through-ball");
+  assert.equal(scenes.usePicture("central"), "central");
+  scenes.usePicture("central");
+});
+
 test("the goalkeeper heading does not say versus a set close shot", () => {
   const plan = fs.readFileSync(path.join(root, "docs", "PLAN.md"), "utf8");
   const scene = scenes.byId[keeper.id];

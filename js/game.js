@@ -487,16 +487,6 @@
     layer.replaceChildren();
 
     const view = attemptApi.presentation(attempt);
-    // Level 2 sends visibleTargets so the good spot and wrong choices stay undrawn.
-    const painted = view.visibleTargets || view.targets;
-    if (painted) {
-      painted.forEach((target) => {
-        layer.append(renderApi.paintTarget(target, view.pickable, onPick, onPickKey));
-      });
-    }
-    view.correctionSpots.forEach((spot) => {
-      layer.append(paintSpot(spot));
-    });
     if (attempt.token) {
       layer.append(
         renderApi.paintToken(
@@ -509,6 +499,17 @@
         )
       );
     }
+    // Level 2 sends visibleTargets so the good spot and wrong choices stay undrawn.
+    // Marks paint after the token so a Level 1 Central pick is not covered.
+    const painted = view.visibleTargets || view.targets;
+    if (painted) {
+      painted.forEach((target) => {
+        layer.append(renderApi.paintTarget(target, view.pickable, onPick, onPickKey));
+      });
+    }
+    view.correctionSpots.forEach((spot) => {
+      layer.append(paintSpot(spot));
+    });
     const motion = nextPlayApi.animationFor(attempt);
     if (motion) layer.append(renderApi.paintMotion(motion));
     if (mark) layer.append(renderApi.paintCelebration(mark));

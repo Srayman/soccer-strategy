@@ -400,6 +400,7 @@ test("the third goalkeeper picture control stays in reach while playing", () => 
   assert.match(angles, /scene\.angles\.forEach/);
   assert.doesNotMatch(angles, /slice\(0,\s*2\)/);
   assert.match(angles, /button\.disabled = !playing/);
+  assert.match(angles, /stopPropagation/);
   assert.match(css, /\.starter-angles\[hidden\]\s*\{[^}]*display:\s*none/);
   const compact = css.slice(css.indexOf("@media (max-width: 800px), (max-height: 500px)"));
   assert.match(compact, /\.starter-angles\s*\{[^}]*position:\s*sticky/);
